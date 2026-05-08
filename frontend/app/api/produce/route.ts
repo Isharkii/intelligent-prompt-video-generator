@@ -1,333 +1,193 @@
 /**
  * POST /api/produce
  *
- * SSE streaming endpoint. On Vercel:
- *   - Accepts already-computed shots + scenePlan + caption from /api/write-prompts
- *   - Calls Higgsfield MCP API directly via HTTP (Bearer auth, no Anthropic MCP client)
- *   - Streams per-shot progress as SSE events
- *   - Returns clip URLs; no local Remotion rendering
+ * Claude is the autonomous MCP orchestrator.
+ * It receives the selected concept + session context, engineers its own
+ * shot prompts, selects models, calls Higgsfield tools directly, and
+ * chains generation → polling → retrieval completely on its own.
  *
- * Request body:
- *   { shots: ShotPrompt[], scenePlan: RemotionScenePlan, caption: CaptionCopy, context: SessionContext }
+ * The client sees Claude's decisions and tool calls in real-time via SSE.
  *
- * SSE event format (same as Express backend):
- *   event: progress\ndata: { stage, status, message, detail? }\n\n
- *   event: done\ndata: { videoPath, caption, shots, concept? }\n\n
- *   event: error\ndata: { message }\n\n
+ * SSE events:
+ *   event: text     data: { chunk: string }          — Claude's live text stream
+ *   event: tool     data: { name, input? }            — tool call started
+ *   event: progress data: { message, status }         — status update
+ *   event: done     data: { shots, caption, concept } — final result
+ *   event: error    data: { message }
  */
 
 import { NextRequest } from "next/server";
-import type {
-  ShotPrompt,
-  GeneratedShot,
-  RemotionScenePlan,
-  CaptionCopy,
-  SessionContext,
-} from "@/lib/types";
+import Anthropic from "@anthropic-ai/sdk";
+import type { IdeaConcept, SessionContext, GeneratedShot, CaptionCopy } from "@/lib/types";
 
-export const dynamic  = "force-dynamic";
-export const maxDuration = 300; // Higgsfield shots can take minutes
-
-// ─── SSE helpers ─────────────────────────────────────────────────────────────
+export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
 function sseEvent(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-function progressEvent(
-  stage: string,
-  status: string,
-  message: string,
-  detail?: string
-): string {
-  return sseEvent("progress", { stage, status, message, ...(detail ? { detail } : {}) });
-}
+function buildSystemPrompt(context: SessionContext): string {
+  const model = process.env.HIGGSFIELD_MODEL ?? "cinematic_studio_3_0";
+  return `You are an autonomous AI video production director for short-form social media.
 
-// ─── Higgsfield HTTP MCP ──────────────────────────────────────────────────────
+You have Higgsfield AI video generation tools. Produce the given concept completely — engineer all prompts yourself, generate every shot, and write caption copy.
 
-async function higgsfield_mcp_call(
-  method: string,
-  params: Record<string, unknown>
-): Promise<unknown> {
-  const url    = process.env.HIGGSFIELD_MCP_URL;
-  const apiKey = process.env.HIGGSFIELD_API_KEY;
+SHOT PROMPT FORMULA — all elements required:
+SUBJECT + ACTION + ENVIRONMENT + LIGHTING + CAMERA MOVEMENT + MOOD + STYLE SUFFIX
 
-  if (!url || !apiKey) {
-    throw new Error(
-      "HIGGSFIELD_MCP_URL and HIGGSFIELD_API_KEY must be set as environment variables"
-    );
-  }
+SHOT RULES:
+- 4 shots total: shot_01 (setup 0–10s), shot_02 (tension 10–20s), shot_03 (payoff 20–30s), shot_04 (b-roll)
+- Each shot: duration 4, aspect_ratio "9:16"
+- Model: "${model}"
+- negative_prompt: "blurry, overexposed, amateur, shaky, text on screen, watermark"
+- Never repeat the same camera movement in consecutive shots
+- First shot must be visually arresting — the hook
+- Last shot must feel conclusive or loop-able
 
-  const body = JSON.stringify({ jsonrpc: "2.0", method, params, id: Date.now() });
-  const res  = await fetch(url, {
-    method:  "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type":  "application/json",
-      "Accept":        "application/json, text/event-stream",
-    },
-    body,
-  });
+WORKFLOW — do these steps in order:
+1. Think through each shot prompt based on the visual style and narrative arc
+2. Call generate_video for shot_01, note the job_id
+3. Call generate_video for shot_02, note the job_id
+4. Call generate_video for shot_03, note the job_id
+5. Call generate_video for shot_04, note the job_id
+6. Poll job_status for each job_id until status is "completed", "done", or "succeeded"
+7. For each completed job, call job_display to get the clip URL
+8. Write the caption copy
 
-  const text = await res.text();
-  // MCP over HTTP/SSE wraps the JSON-RPC response in an SSE frame
-  const dataLine = text.split("\n").find((l) => l.startsWith("data: "));
-  const json     = dataLine ? JSON.parse(dataLine.slice(6)) : JSON.parse(text);
+Platform: ${context.platform ?? "Instagram"}${context.brand ? `\nBrand voice: ${context.brand}` : ""}${context.mood ? `\nMood/energy: ${context.mood}` : ""}
 
-  if (json.error) throw new Error(`MCP error ${json.error.code}: ${json.error.message}`);
-  return json.result;
-}
-
-type McpResult = {
-  content?: Array<{ type: string; text: string }>;
-  structuredContent?: Record<string, unknown>;
-};
-
-async function higgsfield_generate_video(
-  model: string,
-  prompt: string,
-  aspectRatio: string,
-  durationSeconds: number
-): Promise<string> {
-  const result = await higgsfield_mcp_call("tools/call", {
-    name:      "generate_video",
-    arguments: {
-      params: {
-        model,
-        prompt,
-        aspect_ratio: aspectRatio,
-        duration:     Math.max(4, durationSeconds),
-      },
-    },
-  }) as McpResult;
-
-  const text = result.content?.find((c) => c.type === "text")?.text ?? "";
-  if (text.toLowerCase().includes("error") || text.toLowerCase().includes("invalid")) {
-    throw new Error(text.slice(0, 200));
-  }
-
-  const structured = result.structuredContent;
-  const jobId =
-    (structured?.job_id as string | undefined) ??
-    text.match(/job[_\s]?id[:\s]+([a-zA-Z0-9_-]+)/i)?.[1];
-
-  if (!jobId) {
-    const urlMatch = text.match(/https?:\/\/\S+\.mp4[^\s]*/);
-    if (urlMatch) return urlMatch[0];
-    throw new Error(`No job_id in generate_video response: ${text.slice(0, 200)}`);
-  }
-
-  // Poll job status up to 8 minutes (96 × 5s)
-  for (let poll = 0; poll < 96; poll++) {
-    await new Promise((r) => setTimeout(r, 5000));
-
-    const statusResult = await higgsfield_mcp_call("tools/call", {
-      name:      "job_status",
-      arguments: { params: { job_id: jobId } },
-    }) as McpResult;
-
-    const statusText = statusResult.content?.find((c) => c.type === "text")?.text ?? "";
-    const statusData = statusResult.structuredContent;
-    const status     = (statusData?.status as string | undefined) ?? statusText.toLowerCase();
-
-    if (
-      status.includes("completed") ||
-      status.includes("done") ||
-      status.includes("succeeded")
-    ) {
-      const displayResult = await higgsfield_mcp_call("tools/call", {
-        name:      "job_display",
-        arguments: { params: { job_id: jobId } },
-      }) as McpResult;
-
-      const displayText = displayResult.content?.find((c) => c.type === "text")?.text ?? "";
-      const displayData = displayResult.structuredContent;
-      const clipUrl =
-        (displayData?.url as string | undefined) ??
-        (displayData?.clip_url as string | undefined) ??
-        displayText.match(/https?:\/\/\S+/)?.[0];
-
-      if (clipUrl) return clipUrl;
-      throw new Error(`Job ${jobId} completed but no URL found in display response`);
-    }
-
-    if (status.includes("failed") || status.includes("error")) {
-      throw new Error(`Job ${jobId} failed: ${statusText.slice(0, 200)}`);
-    }
-  }
-
-  throw new Error(`Job ${jobId} timed out after 8 minutes`);
-}
-
-// ─── Prompt simplifier (retry) ────────────────────────────────────────────────
-
-function simplifyPrompt(prompt: string): string {
-  const parts   = prompt.split(",").map((p) => p.trim());
-  const subject = parts[0] ?? prompt;
-  const lighting = parts.find((p) =>
-    /light|shadow|glow|neon|sun|moon|backlit|rim|ambient|strobe/i.test(p)
-  ) ?? "";
-  const camera = parts.find((p) =>
-    /shot|angle|close-up|wide|tracking|push|low|high|handheld|depth|portrait|frame/i.test(p)
-  ) ?? "";
-  const style = parts.find((p) =>
-    /ultra|cinematic|realistic|photorealistic|8K|HD|quality|detailed/i.test(p)
-  ) ?? "photorealistic cinematic";
-  return [subject, lighting, camera, style].filter(Boolean).join(", ");
-}
-
-// ─── URL validation ───────────────────────────────────────────────────────────
-
-const VIDEO_CDN_DOMAINS = [
-  "higgsfield.ai",
-  "cdn.higgsfield",
-  "storage.googleapis.com",
-  "s3.amazonaws.com",
-  "cloudfront.net",
-  "r2.cloudflarestorage.com",
-];
-
-function isValidClipUrl(url: string): boolean {
-  if (!url || typeof url !== "string") return false;
-  if (url.endsWith(".mp4")) return true;
-  try {
-    const hostname = new URL(url).hostname;
-    return VIDEO_CDN_DOMAINS.some((d) => hostname.includes(d));
-  } catch {
-    return false;
+FINAL JSON — end your response with exactly this block (no other text after it):
+\`\`\`json
+{
+  "shots": [
+    { "shot_id": "shot_01", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" },
+    { "shot_id": "shot_02", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" },
+    { "shot_id": "shot_03", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" },
+    { "shot_id": "shot_04", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" }
+  ],
+  "caption": {
+    "hook_line": "pattern-interrupt first line — specific and visual",
+    "body_lines": ["expand the hook", "tension or revelation", "payoff or proof"],
+    "cta": "platform-appropriate low-friction call to action",
+    "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]
   }
 }
-
-// ─── Generate one shot (with retry) ──────────────────────────────────────────
-
-async function generateShot(
-  shot: ShotPrompt,
-  model: string
-): Promise<GeneratedShot> {
-  let lastError = "";
-
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const promptToUse = attempt === 1 ? shot.prompt : simplifyPrompt(shot.prompt);
-
-    try {
-      const clipUrl = await higgsfield_generate_video(
-        model,
-        promptToUse,
-        shot.aspect_ratio,
-        shot.duration_seconds
-      );
-
-      if (!isValidClipUrl(clipUrl)) {
-        lastError = `Invalid clip URL returned: "${clipUrl.slice(0, 80)}"`;
-        continue;
-      }
-
-      return {
-        shot_id:          shot.shot_id,
-        clip_url:         clipUrl,
-        thumbnail_url:    "",
-        duration_seconds: shot.duration_seconds,
-        status:           "success",
-      };
-    } catch (err) {
-      lastError = String(err);
-    }
-  }
-
-  return {
-    shot_id:          shot.shot_id,
-    clip_url:         "",
-    thumbnail_url:    "",
-    duration_seconds: 0,
-    status:           "skipped",
-    error:            lastError,
-  };
+\`\`\``;
 }
 
-// ─── Route Handler ────────────────────────────────────────────────────────────
+function buildUserMessage(concept: IdeaConcept, context: SessionContext): string {
+  return `Produce this concept now.
+
+CONCEPT: ${concept.title}
+Topic: ${context.topic}${context.brand ? `\nBrand: ${context.brand}` : ""}
+Visual style: ${concept.visual_style}
+Target emotion: ${concept.target_emotion}
+Duration: ${concept.duration_seconds}s
+Hook: ${concept.hook}
+
+NARRATIVE ARC:
+- Setup (0–10s): ${concept.narrative_arc.beat_1_setup}
+- Tension (10–20s): ${concept.narrative_arc.beat_2_tension}
+- Payoff (20–30s): ${concept.narrative_arc.beat_3_payoff}
+
+Engineer shot prompts, generate all clips via Higgsfield, write the caption, return the final JSON.`;
+}
 
 export async function POST(req: NextRequest) {
-  const body = await req.json() as {
-    shots:     ShotPrompt[];
-    scenePlan: RemotionScenePlan;
-    caption:   CaptionCopy;
-    context?:  SessionContext;
-  };
+  const body = await req.json() as { concept: IdeaConcept; context: SessionContext };
+  const { concept, context } = body;
 
-  const { shots, scenePlan, caption } = body;
-
-  if (!shots?.length) {
+  if (!concept?.id || !context?.topic) {
     return new Response(
-      sseEvent("error", { message: "shots array is required and must not be empty" }),
+      sseEvent("error", { message: "concept and context.topic are required" }),
       { status: 400, headers: { "Content-Type": "text/event-stream" } }
     );
   }
 
-  const model = (process.env.HIGGSFIELD_MODEL ?? "cinematic_studio_3_0").trim();
+  const mcpUrl = process.env.HIGGSFIELD_MCP_URL;
+  const apiKey = process.env.HIGGSFIELD_API_KEY;
 
-  const stream = new ReadableStream({
+  if (!mcpUrl || !apiKey) {
+    return new Response(
+      sseEvent("error", { message: "HIGGSFIELD_MCP_URL and HIGGSFIELD_API_KEY must be set" }),
+      { status: 500, headers: { "Content-Type": "text/event-stream" } }
+    );
+  }
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const readable = new ReadableStream({
     async start(controller) {
       const enc  = (s: string) => new TextEncoder().encode(s);
       const push = (s: string) => controller.enqueue(enc(s));
 
       try {
-        push(progressEvent("higgsfield", "running", `Starting ${shots.length} shot generations`, `model: ${model}`));
+        push(sseEvent("progress", { status: "running", message: "Claude is reading your concept..." }));
 
-        const generatedShots: GeneratedShot[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stream = await (client.beta.messages as any).create({
+          model:      "claude-opus-4-7",
+          max_tokens: 16000,
+          system:     buildSystemPrompt(context),
+          messages:   [{ role: "user", content: buildUserMessage(concept, context) }],
+          betas:      ["mcp-client-2025-04-04"],
+          mcp_servers: [{
+            type:                "url",
+            url:                 mcpUrl,
+            authorization_token: apiKey,
+          }],
+          stream: true,
+        });
 
-        // Sequential generation — matches Express backend behaviour
-        for (let i = 0; i < shots.length; i++) {
-          const shot = shots[i];
-          push(progressEvent(
-            "higgsfield",
-            "running",
-            `Generating shot ${i + 1}/${shots.length}: ${shot.shot_id}`,
-            `beat: ${shot.narrative_beat} · ${shot.duration_seconds}s`
-          ));
+        let fullText    = "";
+        let toolName    = "";
 
-          const result = await generateShot(shot, model);
-          generatedShots.push(result);
-
-          if (result.status === "success") {
-            push(progressEvent(
-              "higgsfield",
-              "done",
-              `Shot ${shot.shot_id} ready`,
-              result.clip_url.slice(0, 80)
-            ));
-          } else {
-            push(progressEvent(
-              "higgsfield",
-              "warning",
-              `Shot ${shot.shot_id} skipped after retry`,
-              result.error?.slice(0, 120)
-            ));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for await (const event of stream as AsyncIterable<any>) {
+          if (event.type === "content_block_start") {
+            const block = event.content_block;
+            if (block?.type === "tool_use") {
+              toolName = block.name as string;
+              push(sseEvent("tool", { name: toolName }));
+            }
+          } else if (event.type === "content_block_delta") {
+            const delta = event.delta;
+            if (delta?.type === "text_delta" && typeof delta.text === "string") {
+              fullText += delta.text;
+              push(sseEvent("text", { chunk: delta.text }));
+            }
+          } else if (event.type === "content_block_stop") {
+            if (toolName) {
+              push(sseEvent("tool", { name: toolName, done: true }));
+              toolName = "";
+            }
           }
         }
 
-        // Inject clip URLs into scene plan
-        const updatedScenes = scenePlan.scenes.map((scene) => ({
-          ...scene,
-          clip_url:
-            generatedShots.find((s) => s.shot_id === scene.clip_source)?.clip_url ??
-            scene.clip_url,
+        // Parse Claude's JSON output
+        const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
+        let shots:   GeneratedShot[] = [];
+        let caption: CaptionCopy | null = null;
+
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[1]);
+            shots   = (parsed.shots   as GeneratedShot[]) ?? [];
+            caption = (parsed.caption as CaptionCopy)     ?? null;
+          } catch {
+            push(sseEvent("progress", { status: "warning", message: "Could not parse Claude's JSON output" }));
+          }
+        }
+
+        const successCount = shots.filter((s) => s.status === "success").length;
+        push(sseEvent("progress", {
+          status:  "done",
+          message: `${successCount}/${shots.length} shots generated`,
         }));
 
-        const successCount = generatedShots.filter((s) => s.status === "success").length;
+        push(sseEvent("done", { shots, caption, concept, videoPath: "" }));
 
-        push(progressEvent(
-          "higgsfield",
-          "done",
-          `All shots complete — ${successCount}/${shots.length} successful`
-        ));
-
-        // Vercel: no Remotion rendering — return clip URLs directly
-        push(sseEvent("done", {
-          videoPath: "",           // No local render on Vercel
-          caption,
-          shots:      generatedShots,
-          scenePlan:  { ...scenePlan, scenes: updatedScenes },
-        }));
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         push(sseEvent("error", { message }));
@@ -337,12 +197,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return new Response(stream, {
+  return new Response(readable, {
     status: 200,
     headers: {
-      "Content-Type":    "text/event-stream",
-      "Cache-Control":   "no-cache, no-transform",
-      "Connection":      "keep-alive",
+      "Content-Type":      "text/event-stream",
+      "Cache-Control":     "no-cache, no-transform",
+      "Connection":        "keep-alive",
       "X-Accel-Buffering": "no",
     },
   });

@@ -4,45 +4,36 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useStudio } from "@/lib/store";
 import type { AppStage } from "@/lib/store";
-import SessionInputScreen   from "@/components/screens/SessionInputScreen";
-import IdeasScreen           from "@/components/screens/IdeasScreen";
-import BriefScreen           from "@/components/screens/BriefScreen";
-import ProducingScreen       from "@/components/screens/ProducingScreen";
-import DeliveryScreen        from "@/components/screens/DeliveryScreen";
-import TrainingEditorScreen  from "@/components/screens/TrainingEditorScreen";
+import SessionInputScreen  from "@/components/screens/SessionInputScreen";
+import IdeasScreen          from "@/components/screens/IdeasScreen";
+import ProducingScreen      from "@/components/screens/ProducingScreen";
+import DeliveryScreen       from "@/components/screens/DeliveryScreen";
+import TrainingEditorScreen from "@/components/screens/TrainingEditorScreen";
 
-const STAGE_ORDER: AppStage[] = ["input", "ideas", "brief", "producing", "delivery"] as const;
+// Brief is no longer in the main flow — Claude decides prompts autonomously
+const STAGE_ORDER: AppStage[] = ["input", "ideas", "producing", "delivery"] as const;
 
 const STAGE_LABELS: Partial<Record<AppStage, string>> = {
   input:     "SESSION",
   ideas:     "IDEAS",
-  brief:     "BRIEF",
   producing: "PRODUCING",
   delivery:  "DELIVERED",
 };
 
 function StageIndicator({ current }: { current: AppStage }) {
-  const currentIdx = STAGE_ORDER.indexOf(current);
+  const currentIdx = STAGE_ORDER.indexOf(current as typeof STAGE_ORDER[number]);
   return (
     <div className="flex items-center gap-1 sm:gap-2">
       {STAGE_ORDER.map((s, i) => (
         <div key={s} className="flex items-center gap-1 sm:gap-2">
           <div
             className={`flex items-center gap-1 transition-all duration-300 ${
-              i === currentIdx
-                ? "opacity-100"
-                : i < currentIdx
-                ? "opacity-40"
-                : "opacity-20"
+              i === currentIdx ? "opacity-100" : i < currentIdx ? "opacity-40" : "opacity-20"
             }`}
           >
             <div
               className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                i < currentIdx
-                  ? "bg-amber"
-                  : i === currentIdx
-                  ? "bg-amber pulse"
-                  : "bg-[var(--text-dim)]"
+                i < currentIdx ? "bg-amber" : i === currentIdx ? "bg-amber pulse" : "bg-[var(--text-dim)]"
               }`}
             />
             <span
@@ -67,36 +58,28 @@ function StageIndicator({ current }: { current: AppStage }) {
 }
 
 function Header() {
-  const stage    = useStudio((s) => s.stage);
-  const reset    = useStudio((s) => s.reset);
-  const setStage = useStudio((s) => s.setStage);
+  const stage       = useStudio((s) => s.stage);
+  const reset       = useStudio((s) => s.reset);
+  const setStage    = useStudio((s) => s.setStage);
   const isProducing = stage === "producing";
 
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8"
       style={{
-        height: "var(--header-height)",
-        background: "rgba(10,10,10,0.85)",
+        height:       "var(--header-height)",
+        background:   "rgba(10,10,10,0.85)",
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid var(--border)",
       }}
     >
-      <button
-        onClick={reset}
-        className="flex items-center gap-2 group"
-        title="Return to start"
-      >
-        <div
-          className={`w-2 h-2 rounded-full transition-colors duration-300 ${isProducing ? "bg-red-500 pulse" : "bg-amber pulse"}`}
-        />
+      <button onClick={reset} className="flex items-center gap-2 group" title="Return to start">
+        <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isProducing ? "bg-red-500 pulse" : "bg-amber pulse"}`} />
         <span className="font-display text-base sm:text-lg tracking-widest text-[var(--text)] group-hover:text-amber transition-colors">
           STUDIO
         </span>
         {isProducing && (
-          <span className="font-mono text-[9px] tracking-widest text-red-400 hidden sm:block">
-            REC
-          </span>
+          <span className="font-mono text-[9px] tracking-widest text-red-400 hidden sm:block">REC</span>
         )}
       </button>
 
@@ -111,9 +94,7 @@ function Header() {
         >
           {stage === "training" ? "← BACK" : "TRAINING"}
         </button>
-        <span className="font-mono text-[10px] text-[var(--text-dim)] hidden sm:block">
-          v2.0
-        </span>
+        <span className="font-mono text-[10px] text-[var(--text-dim)] hidden sm:block">v3.0</span>
       </div>
     </header>
   );
@@ -144,8 +125,7 @@ function ErrorBanner() {
 const TITLE_BY_STAGE: Record<string, string> = {
   input:     "STUDIO — New Session",
   ideas:     "STUDIO — Pick a Concept",
-  brief:     "STUDIO — Review Brief",
-  producing: "STUDIO — Producing...",
+  producing: "STUDIO — Claude is Producing...",
   delivery:  "STUDIO — Ready",
   training:  "STUDIO — Training Editor",
 };
@@ -169,7 +149,6 @@ function ScreenSwitch() {
       >
         {stage === "input"     && <SessionInputScreen />}
         {stage === "ideas"     && <IdeasScreen />}
-        {stage === "brief"     && <BriefScreen />}
         {stage === "producing" && <ProducingScreen />}
         {stage === "delivery"  && <DeliveryScreen />}
         {stage === "training"  && <TrainingEditorScreen />}
@@ -180,10 +159,7 @@ function ScreenSwitch() {
 
 export default function Home() {
   return (
-    <main
-      className="min-h-dvh w-full"
-      style={{ paddingTop: "var(--header-height)" }}
-    >
+    <main className="min-h-dvh w-full" style={{ paddingTop: "var(--header-height)" }}>
       <Header />
       <AnimatePresence>
         <ErrorBanner />

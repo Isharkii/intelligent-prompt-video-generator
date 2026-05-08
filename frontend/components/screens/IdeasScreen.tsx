@@ -34,12 +34,10 @@ function ConceptCard({
       className={`card card-hover relative cursor-pointer ${selected ? "selected" : ""}`}
       onClick={onSelect}
     >
-      {/* Large decorative number */}
       <span className="font-display text-[80px] sm:text-[100px] leading-none text-[var(--border)] select-none absolute top-2 right-4 pointer-events-none">
         {String(index + 1).padStart(2, "0")}
       </span>
 
-      {/* Checkmark when selected */}
       {selected && (
         <div className="absolute top-3 left-3 w-5 h-5 rounded-full bg-amber flex items-center justify-center">
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -49,7 +47,6 @@ function ConceptCard({
       )}
 
       <div className="pr-16 pt-1">
-        {/* Virality + format */}
         <div className="flex items-center gap-2 mb-3">
           <Badge variant="amber">{concept.virality_score}/10</Badge>
           <Badge variant="muted">{concept.format}</Badge>
@@ -74,7 +71,6 @@ function ConceptCard({
           <Badge variant="muted">{concept.shot_count} shots</Badge>
         </div>
 
-        {/* Script preview */}
         {scriptPreview ? (
           <p className="font-mono text-[11px] text-amber italic mb-2">
             &ldquo;{scriptPreview}&rdquo;
@@ -85,7 +81,6 @@ function ConceptCard({
           </p>
         )}
 
-        {/* Expanded details when selected */}
         {selected && (
           <div className="mt-3 pt-3 border-t border-[var(--amber-dim)] space-y-2">
             {[
@@ -106,13 +101,12 @@ function ConceptCard({
           </div>
         )}
 
-        {/* Per-card CTA button when selected */}
         {selected && (
           <button
             onClick={(e) => { e.stopPropagation(); onProduce(); }}
             className="mt-4 w-full py-2.5 bg-amber text-[#0a0a0a] font-mono text-sm tracking-wider font-semibold rounded-sm hover:bg-yellow-400 active:scale-[0.98] transition-all"
           >
-            PRODUCE THIS →
+            PRODUCE WITH CLAUDE →
           </button>
         )}
       </div>
@@ -121,40 +115,23 @@ function ConceptCard({
 }
 
 export default function IdeasScreen() {
-  const ideas         = useStudio((s) => s.ideas);
-  const selectedIndex = useStudio((s) => s.selectedIndex);
-  const selectIdea    = useStudio((s) => s.selectIdea);
-  const context       = useStudio((s) => s.context);
-  const setStage      = useStudio((s) => s.setStage);
-  const setBrief      = useStudio((s) => s.setBrief);
-  const setIdeas      = useStudio((s) => s.setIdeas);
-  const setError      = useStudio((s) => s.setError);
+  const ideas            = useStudio((s) => s.ideas);
+  const selectedIndex    = useStudio((s) => s.selectedIndex);
+  const selectIdea       = useStudio((s) => s.selectIdea);
+  const context          = useStudio((s) => s.context);
+  const setStage         = useStudio((s) => s.setStage);
+  const setIdeas         = useStudio((s) => s.setIdeas);
+  const setError         = useStudio((s) => s.setError);
+  const setProduceTarget = useStudio((s) => s.setProduceTarget);
 
-  const [loading,  setLoading]  = useState(false);
   const [remixing, setRemixing] = useState(false);
 
-  const handleProduce = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/write-prompts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ concept: ideas[selectedIndex], context }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setBrief(data);
-      setStage("brief");
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedIndex, ideas, context, setBrief, setStage, setError]);
+  const handleProduce = useCallback(() => {
+    const concept = ideas[selectedIndex];
+    if (!concept) return;
+    setProduceTarget(concept);
+    setStage("producing");
+  }, [ideas, selectedIndex, setProduceTarget, setStage]);
 
   async function handleRemix() {
     if (!context) return;
@@ -162,9 +139,9 @@ export default function IdeasScreen() {
     setError(null);
     try {
       const res = await fetch("/api/generate-ideas", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context }),
+        body:    JSON.stringify({ context }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -180,20 +157,13 @@ export default function IdeasScreen() {
     }
   }
 
-  // Keyboard: 1-4 select card, Enter produces
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-
       const num = parseInt(e.key, 10);
-      if (num >= 1 && num <= ideas.length) {
-        selectIdea(num - 1);
-        return;
-      }
-      if (e.key === "Enter") {
-        handleProduce();
-      }
+      if (num >= 1 && num <= ideas.length) { selectIdea(num - 1); return; }
+      if (e.key === "Enter") handleProduce();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -210,6 +180,7 @@ export default function IdeasScreen() {
   return (
     <div className="min-h-[calc(100dvh-var(--header-height))] px-4 sm:px-8 py-10">
       <div className="max-w-5xl mx-auto">
+
         <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
           <div>
             <h2 className="font-display text-4xl sm:text-5xl tracking-widest mb-1">
@@ -219,18 +190,18 @@ export default function IdeasScreen() {
               <p className="font-mono text-[12px] text-[var(--text-muted)]">
                 {context.topic}
                 {context.platform && <> · {context.platform}</>}
-                {context.mood && <> · {context.mood}</>}
+                {context.mood    && <> · {context.mood}</>}
               </p>
             )}
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={remixing}
-            onClick={handleRemix}
-          >
-            {remixing ? <LoadingDots size={5} /> : "REMIX ALL ↺"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <p className="font-mono text-[10px] text-[var(--text-dim)] hidden sm:block">
+              Claude will engineer prompts + produce automatically
+            </p>
+            <Button variant="secondary" size="sm" loading={remixing} onClick={handleRemix}>
+              {remixing ? <LoadingDots size={5} /> : "REMIX ALL ↺"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -247,13 +218,8 @@ export default function IdeasScreen() {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          <Button
-            variant="primary"
-            size="lg"
-            loading={loading}
-            onClick={handleProduce}
-          >
-            {loading ? <LoadingDots /> : `PRODUCE CONCEPT ${selectedIndex + 1}`}
+          <Button variant="primary" size="lg" onClick={handleProduce}>
+            PRODUCE CONCEPT {selectedIndex + 1} WITH CLAUDE
           </Button>
           <Button variant="ghost" size="md" onClick={() => setStage("input")}>
             BACK

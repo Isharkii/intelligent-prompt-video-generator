@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { useStudio } from "@/lib/store";
-import { API_BASE_URL } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 
@@ -40,6 +39,15 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function StatItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="font-mono text-[9px] tracking-widest text-[var(--text-dim)]">{label}</span>
+      <span className="font-mono text-[12px] text-[var(--text)]">{value}</span>
+    </div>
+  );
+}
+
 export default function DeliveryScreen() {
   const videoPath      = useStudio((s) => s.videoPath);
   const deliveredShots = useStudio((s) => s.deliveredShots);
@@ -47,87 +55,23 @@ export default function DeliveryScreen() {
   const caption        = useStudio((s) => s.deliveredCaption);
   const reset          = useStudio((s) => s.reset);
   const setStage       = useStudio((s) => s.setStage);
-  const updateProgress   = useStudio((s) => s.updateProgress);
-  const setError         = useStudio((s) => s.setError);
-  const setDelivery      = useStudio((s) => s.setDelivery);
 
   const firedRef = useRef(false);
   useEffect(() => {
     if (firedRef.current) return;
     firedRef.current = true;
-    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ["#f59e0b", "#fbbf24", "#fde68a", "#f0ede6"] });
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ["#f59e0b", "#fbbf24", "#fde68a", "#f0ede6"],
+    });
   }, []);
 
-  const successCount  = deliveredShots.filter((s) => s.status === "success").length;
-  const hasFailures   = deliveredShots.some((s) => s.status !== "success");
+  const successCount = deliveredShots.filter((s) => s.status === "success").length;
   const captionText  = caption
     ? [caption.hook_line, ...caption.body_lines, caption.cta, caption.hashtags.join(" ")].join("\n")
     : "";
-
-  async function handleResize() {
-    const res = await fetch("/api/resize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ formats: ["1:1", "16:9"] }),
-    });
-    if (!res.ok) alert("Resize failed");
-    else alert("Resize jobs queued — check output/ folder.");
-  }
-
-  async function handleRetry() {
-    const res = await fetch("/api/retry", { method: "POST" });
-
-    // Non-streaming error (409/400)
-    const ct = res.headers.get("Content-Type") ?? "";
-    if (!ct.includes("text/event-stream")) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error ?? `Retry failed: HTTP ${res.status}`);
-      return;
-    }
-
-    setStage("producing");
-    setError(null);
-
-    const reader  = res.body?.getReader();
-    const decoder = new TextDecoder();
-    if (!reader) return;
-
-    let buffer = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const parts = buffer.split("\n\n");
-      buffer = parts.pop() ?? "";
-      for (const part of parts) {
-        const lines = part.split("\n");
-        let event = "message";
-        let data  = "";
-        for (const line of lines) {
-          if (line.startsWith("event: ")) event = line.slice(7).trim();
-          if (line.startsWith("data: "))  data  = line.slice(6).trim();
-        }
-        if (!data) continue;
-        try {
-          const payload = JSON.parse(data);
-          if (event === "progress") {
-            updateProgress(payload);
-          } else if (event === "done") {
-            setDelivery({
-              videoPath: payload.videoPath,
-              shots:     payload.shots,
-              concept:   payload.concept ?? concept!,
-              caption:   payload.caption ?? caption!,
-            });
-            setTimeout(() => setStage("delivery"), 1500);
-          } else if (event === "error") {
-            setError(payload.message);
-            setStage("delivery");
-          }
-        } catch { /* non-JSON line */ }
-      }
-    }
-  }
 
   return (
     <div className="min-h-[calc(100dvh-var(--header-height))] px-4 sm:px-8 py-10">
@@ -150,13 +94,9 @@ export default function DeliveryScreen() {
           <div className="lg:col-span-1 flex justify-center">
             {videoPath ? (
               <div className="w-full max-w-xs">
-                <VideoPlayer src={`${API_BASE_URL}${videoPath}`} />
-                <div className="mt-3 flex gap-2">
-                  <a
-                    href={`${API_BASE_URL}${videoPath}`}
-                    download
-                    className="flex-1"
-                  >
+                <VideoPlayer src={videoPath} />
+                <div className="mt-3">
+                  <a href={videoPath} download>
                     <Button variant="primary" size="sm" className="w-full">
                       DOWNLOAD MP4
                     </Button>
@@ -164,8 +104,16 @@ export default function DeliveryScreen() {
                 </div>
               </div>
             ) : (
-              <div className="card w-full max-w-xs flex items-center justify-center" style={{ aspectRatio: "9/16" }}>
-                <p className="font-mono text-[11px] text-[var(--text-dim)]">No video path</p>
+              <div
+                className="card w-full max-w-xs flex flex-col items-center justify-center gap-4 text-center"
+                style={{ aspectRatio: "9/16" }}
+              >
+                <p className="font-mono text-[11px] text-[var(--text-dim)]">
+                  Clips generated via Higgsfield
+                </p>
+                <p className="font-mono text-[10px] text-[var(--text-dim)]">
+                  {successCount} shot{successCount !== 1 ? "s" : ""} ready
+                </p>
               </div>
             )}
           </div>
@@ -178,24 +126,21 @@ export default function DeliveryScreen() {
               <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-3">
                 Production Summary
               </p>
-              <div className="flex flex-wrap gap-4">
-                <StatItem label="SHOTS" value={`${successCount}/${deliveredShots.length} generated`} />
-                {concept && <StatItem label="FORMAT"    value={concept.format} />}
-                {concept && <StatItem label="DURATION"  value={`${concept.duration_seconds}s`} />}
-                {concept && <StatItem label="VIRALITY"  value={`${concept.virality_score}/10`} />}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <StatItem label="SHOTS"    value={`${successCount}/${deliveredShots.length} generated`} />
+                {concept && <StatItem label="FORMAT"   value={concept.format} />}
+                {concept && <StatItem label="DURATION" value={`${concept.duration_seconds}s`} />}
+                {concept && <StatItem label="VIRALITY" value={`${concept.virality_score}/10`} />}
               </div>
 
-              {/* Shot statuses */}
-              <div className="mt-4 space-y-1">
+              <div className="space-y-1.5">
                 {deliveredShots.map((shot) => (
                   <div key={shot.shot_id} className="flex items-center gap-2">
                     <Badge
                       variant={
-                        shot.status === "success"
-                          ? "success"
-                          : shot.status === "failed"
-                          ? "error"
-                          : "muted"
+                        shot.status === "success" ? "success"
+                        : shot.status === "failed" ? "error"
+                        : "muted"
                       }
                     >
                       {shot.status}
@@ -242,24 +187,14 @@ export default function DeliveryScreen() {
               </div>
             )}
 
-            {/* Post-delivery actions */}
+            {/* Actions */}
             <div className="card space-y-3">
               <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
                 What Next?
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm" onClick={handleResize}>
-                  RESIZE → 1:1 + 16:9
-                </Button>
-                <Button
-                  variant={hasFailures ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={handleRetry}
-                >
-                  {hasFailures ? "⚠ RETRY FAILED SHOTS" : "RETRY / RE-RENDER"}
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => setStage("brief")}>
-                  RECUT
+                <Button variant="secondary" size="sm" onClick={() => setStage("ideas")}>
+                  PICK ANOTHER CONCEPT
                 </Button>
                 <Button variant="ghost" size="sm" onClick={reset}>
                   NEW SESSION
@@ -269,15 +204,6 @@ export default function DeliveryScreen() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="font-mono text-[9px] tracking-widest text-[var(--text-dim)]">{label}</span>
-      <span className="font-mono text-[12px] text-[var(--text)]">{value}</span>
     </div>
   );
 }

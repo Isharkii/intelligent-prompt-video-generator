@@ -8,35 +8,21 @@ import type {
   RemotionScenePlan,
   CaptionCopy,
   GeneratedShot,
-  ProgressEvent,
-  ProduceStage,
 } from "./types";
 
 export type AppStage =
   | "input"
   | "ideas"
-  | "brief"
   | "producing"
   | "delivery"
   | "training";
-
-export interface ShotStatus {
-  shot_id: string;
-  status: "pending" | "generating" | "success" | "failed" | "skipped";
-  clip_url?: string;
-}
-
-export interface StageProgress {
-  status: "idle" | "running" | "done" | "warning" | "skipped";
-  message: string;
-}
 
 interface StudioStore {
   // Stage
   stage: AppStage;
   setStage: (stage: AppStage) => void;
 
-  // Session context (from input form)
+  // Session context
   context: SessionContext | null;
   setContext: (ctx: SessionContext) => void;
 
@@ -46,21 +32,24 @@ interface StudioStore {
   selectedIndex: number;
   selectIdea: (index: number) => void;
 
-  // Brief
+  // Produce target — concept the user chose to produce
+  produceTarget: IdeaConcept | null;
+  setProduceTarget: (concept: IdeaConcept) => void;
+
+  // Brief (kept for write-prompts compatibility, not in main flow)
   shots: ShotPrompt[];
   scenePlan: RemotionScenePlan | null;
   caption: CaptionCopy | null;
   setBrief: (brief: { shots: ShotPrompt[]; scenePlan: RemotionScenePlan; caption: CaptionCopy }) => void;
 
-  // Producing — SSE progress
-  stageProgress: Record<ProduceStage, StageProgress>;
-  shotStatuses: ShotStatus[];
-  logLines: string[];
-  currentFrame: number;
-  totalFrames: number;
-  updateProgress: (evt: ProgressEvent) => void;
-  setFrame: (current: number, total: number) => void;
-  appendLog: (line: string) => void;
+  // Claude live stream
+  claudeText: string;
+  appendClaudeText: (chunk: string) => void;
+  toolCalls: Array<{ name: string; done: boolean }>;
+  pushToolCall: (name: string) => void;
+  completeToolCall: (name: string) => void;
+  produceStatus: string;
+  setProduceStatus: (msg: string) => void;
 
   // Delivery
   videoPath: string;
@@ -71,7 +60,7 @@ interface StudioStore {
     videoPath: string;
     shots: GeneratedShot[];
     concept: IdeaConcept;
-    caption: CaptionCopy;
+    caption: CaptionCopy | null;
   }) => void;
 
   // Error
@@ -82,14 +71,7 @@ interface StudioStore {
   reset: () => void;
 }
 
-const defaultStageProgress = (): Record<ProduceStage, StageProgress> => ({
-  prompts:    { status: "idle", message: "" },
-  higgsfield: { status: "idle", message: "" },
-  lipsync:    { status: "idle", message: "" },
-  remotion:   { status: "idle", message: "" },
-});
-
-export const useStudio = create<StudioStore>((set, get) => ({
+export const useStudio = create<StudioStore>((set) => ({
   stage: "input",
   setStage: (stage) => set({ stage }),
 
@@ -101,44 +83,27 @@ export const useStudio = create<StudioStore>((set, get) => ({
   selectedIndex: 0,
   selectIdea: (index) => set({ selectedIndex: index }),
 
+  produceTarget: null,
+  setProduceTarget: (concept) => set({ produceTarget: concept }),
+
   shots: [],
   scenePlan: null,
   caption: null,
-  setBrief: ({ shots, scenePlan, caption }) =>
-    set({ shots, scenePlan, caption }),
+  setBrief: ({ shots, scenePlan, caption }) => set({ shots, scenePlan, caption }),
 
-  stageProgress: defaultStageProgress(),
-  shotStatuses: [],
-  logLines: [],
-  currentFrame: 0,
-  totalFrames: 0,
-
-  updateProgress: (evt) => {
-    const prev = get().stageProgress;
-    set({
-      stageProgress: {
-        ...prev,
-        [evt.stage]: { status: evt.status, message: evt.message },
-      },
-    });
-    // Append SSE message to log
-    const statusIcon: Record<string, string> = {
-      running: "⏳",
-      done:    "✓",
-      warning: "⚠",
-      skipped: "—",
-    };
-    const icon = statusIcon[evt.status] ?? "·";
+  claudeText: "",
+  appendClaudeText: (chunk) => set((s) => ({ claudeText: s.claudeText + chunk })),
+  toolCalls: [],
+  pushToolCall: (name) =>
+    set((s) => ({ toolCalls: [...s.toolCalls, { name, done: false }] })),
+  completeToolCall: (name) =>
     set((s) => ({
-      logLines: [...s.logLines, `${icon} [${evt.stage}] ${evt.message}`],
-    }));
-  },
-
-  setFrame: (current, total) =>
-    set({ currentFrame: current, totalFrames: total }),
-
-  appendLog: (line) =>
-    set((s) => ({ logLines: [...s.logLines, line] })),
+      toolCalls: s.toolCalls.map((t) =>
+        t.name === name && !t.done ? { ...t, done: true } : t
+      ),
+    })),
+  produceStatus: "",
+  setProduceStatus: (msg) => set({ produceStatus: msg }),
 
   videoPath: "",
   deliveredShots: [],
@@ -147,7 +112,7 @@ export const useStudio = create<StudioStore>((set, get) => ({
   setDelivery: ({ videoPath, shots, concept, caption }) =>
     set({
       videoPath,
-      deliveredShots: shots,
+      deliveredShots:   shots,
       deliveredConcept: concept,
       deliveredCaption: caption,
     }),
@@ -157,22 +122,31 @@ export const useStudio = create<StudioStore>((set, get) => ({
 
   reset: () =>
     set({
-      stage: "input",
-      context: null,
-      ideas: [],
-      selectedIndex: 0,
-      shots: [],
-      scenePlan: null,
-      caption: null,
-      stageProgress: defaultStageProgress(),
-      shotStatuses: [],
-      logLines: [],
-      currentFrame: 0,
-      totalFrames: 0,
-      videoPath: "",
-      deliveredShots: [],
+      stage:           "input",
+      context:         null,
+      ideas:           [],
+      selectedIndex:   0,
+      produceTarget:   null,
+      shots:           [],
+      scenePlan:       null,
+      caption:         null,
+      claudeText:      "",
+      toolCalls:       [],
+      produceStatus:   "",
+      videoPath:       "",
+      deliveredShots:  [],
       deliveredConcept: null,
       deliveredCaption: null,
-      error: null,
+      error:           null,
     }),
+
+  // Legacy — kept so existing code compiles
+  stageProgress: {} as never,
+  shotStatuses: [] as never,
+  logLines: [] as never,
+  currentFrame: 0,
+  totalFrames: 0,
+  updateProgress: () => { /* no-op */ },
+  setFrame: () => { /* no-op */ },
+  appendLog: () => { /* no-op */ },
 }));
