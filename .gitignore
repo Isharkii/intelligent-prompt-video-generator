@@ -1,0 +1,43 @@
+# Environment — NEVER commit these
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+frontend/.env
+
+# API key files
+*.key
+secrets/
+
+# Node
+node_modules/
+frontend/node_modules/
+remotion/node_modules/
+
+# Build outputs
+frontend/.next/
+frontend/out/
+dist/
+build/
+
+# Remotion render output
+output/
+output/thumbnails/
+remotion/scene-config.json
+remotion/scene-config-combined.json
+
+# Temp files
+*.tmp
+sessions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+.vercel

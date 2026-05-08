@@ -1,0 +1,270 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-05-06",
+  "style_guides": [
+    {
+      "name": "cyber_noir",
+      "lighting": ["neon backlight", "rain-reflected neon", "high-contrast shadows", "teal and crimson bokeh", "LED rim light"],
+      "color_palette": ["deep teal", "crimson red", "midnight black", "electric blue", "acid purple"],
+      "mood_descriptors": ["cyber-noir atmosphere", "futuristic tension", "rain-slicked streets", "dystopian energy"],
+      "quality_markers": ["ultra-realistic", "cinematic", "deep shadows", "high-contrast", "photorealistic"]
+    },
+    {
+      "name": "golden_hour_cinematic",
+      "lighting": ["warm natural sunlight", "golden hour glow", "soft side-lit warmth", "long shadows", "rim-lit silhouette"],
+      "color_palette": ["amber gold", "burnt orange", "warm ivory", "dusty rose", "honey brown"],
+      "mood_descriptors": ["dreamy earthy vintage", "warm editorial", "golden hour magic", "cinematic warmth"],
+      "quality_markers": ["cinematic", "photorealistic", "8K ultra-detailed", "film grain", "anamorphic lens flare"]
+    },
+    {
+      "name": "urban_night_portrait",
+      "lighting": ["streetlight glow", "moody ambient car lighting", "neon sign spill", "underlit dramatic", "wet-pavement reflections"],
+      "color_palette": ["deep navy", "electric magenta", "icy blue", "warm amber", "neon green"],
+      "mood_descriptors": ["candid cinematic", "lifestyle photography", "urban night energy", "electric intimate"],
+      "quality_markers": ["HD", "realistic", "natural", "authentic", "iPhone-style candid"]
+    },
+    {
+      "name": "raw_handheld",
+      "lighting": ["available light", "harsh overhead fluorescent", "natural window light", "overexposed highlights", "lens flare"],
+      "color_palette": ["desaturated neutrals", "raw skin tones", "concrete grey", "washed-out whites"],
+      "mood_descriptors": ["candid unplanned", "viral atmosphere", "documentary raw", "authentic energy"],
+      "quality_markers": ["hyper-realistic", "smartphone grain", "motion blur", "unstable exposure", "amateur close-up"]
+    },
+    {
+      "name": "luxury_editorial",
+      "lighting": ["soft studio light", "beauty dish", "glamour lighting", "high-key even light", "product-perfect illumination"],
+      "color_palette": ["champagne gold", "ivory white", "rose gold", "deep emerald", "matte black"],
+      "mood_descriptors": ["aspirational luxury", "high-fashion editorial", "sleek modern", "aspirational lifestyle"],
+      "quality_markers": ["ultra-detailed", "photorealistic", "studio quality", "sharp focus", "commercial grade"]
+    }
+  ],
+  "hook_patterns": [
+    {
+      "pattern": "Open on extreme close-up of [subject detail], pull back to reveal full scene",
+      "energy": "cinematic",
+      "example": "Open on extreme close-up of water droplets on leather jacket, pull back to reveal a figure standing in rain-soaked alley"
+    },
+    {
+      "pattern": "Subject walks into frame from off-screen, stops dead, looks directly into camera",
+      "energy": "hype",
+      "example": "Subject strides in from left edge, stops sharp, locks eyes with the camera — dead silence for half a beat"
+    },
+    {
+      "pattern": "Cut to black for 0.5s, then smash-cut to the most visually striking frame of the video",
+      "energy": "hype",
+      "example": "0.5s black leader, then smash-cut to subject mid-action with full motion blur and peak color"
+    },
+    {
+      "pattern": "Slow push-in on a still subject, then subject suddenly moves",
+      "energy": "cinematic",
+      "example": "Slow push-in on model standing perfectly still in golden light, then she turns sharply on the beat"
+    },
+    {
+      "pattern": "Text on black: [counterintuitive claim]. Then cut to visual proof.",
+      "energy": "raw",
+      "example": "Text on black: 'You've been doing this wrong.' Then cut to the correct method shown visually."
+    },
+    {
+      "pattern": "Aerial drone descends rapidly from sky into a scene",
+      "energy": "luxury",
+      "example": "Drone falls from clouds, descends into golden coastline, reveals subject standing at shoreline"
+    },
+    {
+      "pattern": "Start in the middle of a conversation — no setup, mid-sentence energy",
+      "energy": "raw",
+      "example": "Audio starts mid-sentence: '...and that's exactly why nobody tells you this.' — subject already in frame looking at camera"
+    },
+    {
+      "pattern": "Product / subject appears from behind a surface with a reveal wipe",
+      "energy": "any",
+      "example": "Bottle slides from behind white surface into frame, catching light as it rotates"
+    },
+    {
+      "pattern": "Match cut between two visually rhyming shots from different worlds",
+      "energy": "calm",
+      "example": "Cup of coffee spinning — match cut to earth spinning from space — then back to the cup lifting to lips"
+    },
+    {
+      "pattern": "Whip pan to subject surrounded by chaos, they remain perfectly still",
+      "energy": "luxury",
+      "example": "Whip pan chaos of a busy street, then landing on subject completely composed — calm amid the storm"
+    }
+  ],
+  "shot_vocabulary": {
+    "lighting": [
+      "warm natural sunlight with crisp shadows",
+      "dramatic rain streaks with neon backlight",
+      "moody ambient car lighting from below",
+      "golden hour rim light with lens flare",
+      "high-contrast cyber-noir shadows",
+      "soft beauty dish with clean falloff",
+      "available street LED with wet pavement reflections",
+      "diagonal spotlight from top-left",
+      "overexposed highlights with lens flare",
+      "deep shadow with single-source key light",
+      "blue-hour twilight with warm window spill",
+      "harsh midday overhead light with fill",
+      "candlelight warmth with soft ambient fill",
+      "neon sign spill in deep shadow",
+      "underwater caustic light patterns"
+    ],
+    "camera_movements": [
+      "slow push-in to medium close-up",
+      "wide establishing pull-back",
+      "smooth tracking shot following subject",
+      "whip pan left to right",
+      "low-angle slightly looking up",
+      "high-angle overhead looking down",
+      "shallow depth of field with subject sharp",
+      "tight head-and-shoulders portrait",
+      "handheld follow with natural shake",
+      "static locked-off wide shot",
+      "360-degree orbit around subject",
+      "dutch angle 15 degrees",
+      "extreme close-up on detail",
+      "rack focus foreground to background",
+      "steadicam glide through environment"
+    ],
+    "mood_language": [
+      "cyber-noir atmosphere",
+      "dreamy earthy vintage",
+      "casual stylish modern street fashion",
+      "aspirational luxury lifestyle",
+      "raw unfiltered documentary",
+      "cinematic tension building",
+      "electric urban night energy",
+      "golden warmth nostalgia",
+      "cold clinical precision",
+      "candid viral street moment",
+      "high-fashion editorial calm",
+      "chaotic hype energy",
+      "ethereal slow-motion beauty",
+      "gritty authentic realism",
+      "sleek futuristic minimal"
+    ],
+    "style_suffixes": [
+      "ultra-realistic",
+      "cinematic",
+      "8K ultra-detailed",
+      "photorealistic",
+      "hyper-realistic",
+      "film grain texture",
+      "anamorphic lens",
+      "shallow depth of field",
+      "high-detail",
+      "sharp focus",
+      "commercial grade",
+      "editorial quality",
+      "documentary style",
+      "Instagram-style warm color mood",
+      "high contrast deep blacks"
+    ]
+  },
+  "narrative_arcs": [
+    {
+      "name": "reveal_arc",
+      "beat_1": "Establish the familiar — show the problem or ordinary state visually",
+      "beat_2": "Interrupt — something unexpected enters the frame or the narrative flips",
+      "beat_3": "Reveal — show the new truth, product, or transformation",
+      "best_for": ["product launches", "before-after", "contrarian takes"]
+    },
+    {
+      "name": "aspiration_arc",
+      "beat_1": "Show the aspirational outcome first — the life, the result, the feeling",
+      "beat_2": "Pull back the curtain — how or why this is achievable",
+      "beat_3": "Direct invitation — here's how you get there, CTA",
+      "best_for": ["luxury brands", "fitness", "travel", "lifestyle"]
+    },
+    {
+      "name": "tension_release_arc",
+      "beat_1": "Open in conflict — stress, problem, high-energy chaos",
+      "beat_2": "Escalate the tension — make it feel urgent",
+      "beat_3": "Release — resolution arrives, brand is the relief",
+      "best_for": ["problem-solution brands", "education", "SaaS"]
+    },
+    {
+      "name": "social_proof_arc",
+      "beat_1": "Open with a bold claim that creates curiosity or skepticism",
+      "beat_2": "Show evidence — real results, reactions, or proof",
+      "beat_3": "Reframe — the claim was right, here's why it matters to you",
+      "best_for": ["testimonials", "case studies", "brand awareness"]
+    },
+    {
+      "name": "visual_journey_arc",
+      "beat_1": "Pure visual immersion — no text, just the world of the brand",
+      "beat_2": "Movement builds — increasing pace, music lifts",
+      "beat_3": "Peak visual moment — the money shot lands as music hits",
+      "best_for": ["fashion", "travel", "luxury", "food/drink"]
+    }
+  ],
+  "platform_rules": [
+    {
+      "platform": "Instagram",
+      "optimal_duration_seconds": 30,
+      "caption_style": "punchy",
+      "hook_style": "visual-first with text overlay",
+      "caption_length": "under 150 characters for above-fold visibility",
+      "hashtag_count": 5,
+      "cta_style": "Save this. Share with someone who needs it."
+    },
+    {
+      "platform": "TikTok",
+      "optimal_duration_seconds": 21,
+      "caption_style": "conversational",
+      "hook_style": "audio hook in first 0.5 seconds",
+      "caption_length": "under 100 characters — TikTok captions are secondary",
+      "hashtag_count": 3,
+      "cta_style": "Comment [word] and I'll send you the link."
+    },
+    {
+      "platform": "YouTube Shorts",
+      "optimal_duration_seconds": 45,
+      "caption_style": "educational",
+      "hook_style": "spoken hook with visual proof",
+      "caption_length": "up to 300 characters with keyword-rich text",
+      "hashtag_count": 3,
+      "cta_style": "Subscribe for the full breakdown."
+    },
+    {
+      "platform": "LinkedIn",
+      "optimal_duration_seconds": 45,
+      "caption_style": "storytelling",
+      "hook_style": "bold first line that breaks professional norms",
+      "caption_length": "3–5 short paragraphs with line breaks",
+      "hashtag_count": 3,
+      "cta_style": "Follow for more. Drop your take in the comments."
+    }
+  ],
+  "banned_phrases": [
+    "game changer",
+    "revolutionize",
+    "unlock your potential",
+    "take your brand to the next level",
+    "in today's world",
+    "more important than ever",
+    "cutting-edge",
+    "state of the art",
+    "seamlessly",
+    "leverage",
+    "synergy",
+    "moving forward",
+    "at the end of the day",
+    "it's all about",
+    "transform your life",
+    "elevate your brand",
+    "world-class",
+    "best-in-class",
+    "innovative solution",
+    "dynamic",
+    "robust",
+    "holistic approach",
+    "circle back",
+    "low-hanging fruit",
+    "paradigm shift",
+    "thought leader",
+    "disrupt",
+    "empower",
+    "authenticity",
+    "journey"
+  ]
+}

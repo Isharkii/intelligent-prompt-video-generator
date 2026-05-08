@@ -1,0 +1,38 @@
+{
+  "name": "social-media-studio",
+  "version": "1.0.0",
+  "description": "AI-powered social media video production pipeline",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "test": "ts-node src/test_run.ts",
+    "test:video": "ts-node src/test_captions_and_clips.ts",
+    "build": "tsc",
+    "dev": "ts-node --watch src/index.ts",
+    "studio": "ts-node src/index.ts",
+    "demo": "ts-node src/demo_run.ts",
+    "web": "PORT=3001 ts-node src/server.ts",
+    "remotion": "remotion studio remotion/Root.tsx",
+    "dev:all": "concurrently --names \"API,UI\" --prefix-colors \"yellow,cyan\" \"npm run web\" \"cd frontend && npm run dev\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@remotion/cli": "^4.0.0",
+    "@remotion/google-fonts": "^4.0.457",
+    "@remotion/player": "^4.0.0",
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.22.1",
+    "inquirer": "^9.3.7",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.25",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "concurrently": "^9.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

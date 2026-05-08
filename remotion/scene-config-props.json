@@ -1,0 +1,133 @@
+{
+  "config": {
+    "composition_id": "final_video",
+    "fps": 30,
+    "total_duration_frames": 810,
+    "aspect_ratio": "9:16",
+    "scenes": [
+      {
+        "scene_id": "scene_01",
+        "from_frame": 0,
+        "duration_frames": 150,
+        "clip_source": "shot_01",
+        "transition_in": "cut",
+        "transition_out": "cut",
+        "caption": {
+          "text": "ONE DECK CHANGED EVERYTHING",
+          "style": "bold_center",
+          "appear_at_frame": 10,
+          "disappear_at_frame": 135
+        },
+        "broll_overlay": {
+          "enabled": false,
+          "type": "none"
+        },
+        "audio_note": "fade in ambient room tone, low tension underscore begins",
+        "clip_url": ""
+      },
+      {
+        "scene_id": "scene_02",
+        "from_frame": 150,
+        "duration_frames": 120,
+        "clip_source": "shot_02",
+        "transition_in": "cut",
+        "transition_out": "whip_pan",
+        "caption": {
+          "text": "Slides printed, table set, stakes real",
+          "style": "lower_third",
+          "appear_at_frame": 10,
+          "disappear_at_frame": 105
+        },
+        "broll_overlay": {
+          "enabled": false,
+          "type": "none"
+        },
+        "audio_note": "subtle paper shuffle, chair scrape foley",
+        "clip_url": ""
+      },
+      {
+        "scene_id": "scene_03",
+        "from_frame": 270,
+        "duration_frames": 150,
+        "clip_source": "shot_03",
+        "transition_in": "cut",
+        "transition_out": "cut",
+        "caption": {
+          "text": "THEY WEREN'T CONVINCED YET",
+          "style": "bold_center",
+          "appear_at_frame": 10,
+          "disappear_at_frame": 135
+        },
+        "broll_overlay": {
+          "enabled": true,
+          "type": "close_up_faces"
+        },
+        "audio_note": "music tension builds, sparse piano stabs",
+        "clip_url": ""
+      },
+      {
+        "scene_id": "scene_04",
+        "from_frame": 420,
+        "duration_frames": 120,
+        "clip_source": "shot_04",
+        "transition_in": "cut",
+        "transition_out": "cut",
+        "caption": {
+          "text": "Silence across the table",
+          "style": "lower_third",
+          "appear_at_frame": 10,
+          "disappear_at_frame": 105
+        },
+        "broll_overlay": {
+          "enabled": true,
+          "type": "deck_close_up"
+        },
+        "audio_note": "room tone drop, tension peak, breath hold moment",
+        "clip_url": ""
+      },
+      {
+        "scene_id": "scene_05",
+        "from_frame": 540,
+        "duration_frames": 150,
+        "clip_source": "shot_05",
+        "transition_in": "cut",
+        "transition_out": "fade",
+        "caption": {
+          "text": "DEAL CLOSED RIGHT THERE",
+          "style": "bold_center",
+          "appear_at_frame": 10,
+          "disappear_at_frame": 135
+        },
+        "broll_overlay": {
+          "enabled": false,
+          "type": "none"
+        },
+        "audio_note": "music swells warm, handshake foley, energy release",
+        "clip_url": ""
+      },
+      {
+        "scene_id": "scene_06",
+        "from_frame": 690,
+        "duration_frames": 120,
+        "clip_source": "shot_06",
+        "transition_in": "fade",
+        "transition_out": "fade",
+        "caption": {
+          "text": "Your deck does the talking",
+          "style": "lower_third",
+          "appear_at_frame": 10,
+          "disappear_at_frame": 105
+        },
+        "broll_overlay": {
+          "enabled": false,
+          "type": "none"
+        },
+        "audio_note": "music fades to warm resolve, fade out",
+        "clip_url": ""
+      }
+    ],
+    "global_color_grade": "desaturated_raw",
+    "caption_font": "Inter Bold",
+    "music_mood": "cinematic"
+  }
+}

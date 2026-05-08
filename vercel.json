@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/produce/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/generate-ideas/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/write-prompts/route.ts": {
+      "maxDuration": 120
+    }
+  },
+  "env": {
+    "ANTHROPIC_API_KEY":    "@anthropic-api-key",
+    "HIGGSFIELD_API_KEY":   "@higgsfield-api-key",
+    "HIGGSFIELD_MCP_URL":   "@higgsfield-mcp-url",
+    "HIGGSFIELD_MODEL":     "@higgsfield-model"
+  }
+}

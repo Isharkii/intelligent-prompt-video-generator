@@ -1,0 +1,111 @@
+{
+  "composition_id": "final_video",
+  "fps": 30,
+  "total_duration_frames": 600,
+  "aspect_ratio": "9:16",
+  "scenes": [
+    {
+      "scene_id": "scene_01",
+      "from_frame": 0,
+      "duration_frames": 120,
+      "clip_source": "shot_01",
+      "transition_in": "cut",
+      "transition_out": "glitch",
+      "caption": {
+        "text": "You think fancy coffee costs more.",
+        "style": "bold_center",
+        "appear_at_frame": 10,
+        "disappear_at_frame": 105
+      },
+      "broll_overlay": {
+        "enabled": false,
+        "type": "none"
+      },
+      "audio_note": "fade in",
+      "clip_url": "https://www.w3schools.com/html/mov_bbb.mp4"
+    },
+    {
+      "scene_id": "scene_02",
+      "from_frame": 120,
+      "duration_frames": 90,
+      "clip_source": "shot_02",
+      "transition_in": "glitch",
+      "transition_out": "cut",
+      "caption": {
+        "text": "Daily café runs add up fast.",
+        "style": "bold_center",
+        "appear_at_frame": 130,
+        "disappear_at_frame": 195
+      },
+      "broll_overlay": {
+        "enabled": true,
+        "type": "product_spotlight"
+      },
+      "audio_note": "ambient neon hum",
+      "clip_url": "https://www.w3schools.com/html/mov_bbb.mp4"
+    },
+    {
+      "scene_id": "scene_03",
+      "from_frame": 210,
+      "duration_frames": 150,
+      "clip_source": "shot_03",
+      "transition_in": "cut",
+      "transition_out": "glitch",
+      "caption": {
+        "text": "$7 latte every day — do the math.",
+        "style": "bold_center",
+        "appear_at_frame": 220,
+        "disappear_at_frame": 345
+      },
+      "broll_overlay": {
+        "enabled": false,
+        "type": "none"
+      },
+      "audio_note": "tension build",
+      "clip_url": "https://www.w3schools.com/html/mov_bbb.mp4"
+    },
+    {
+      "scene_id": "scene_04",
+      "from_frame": 360,
+      "duration_frames": 90,
+      "clip_source": "shot_04",
+      "transition_in": "glitch",
+      "transition_out": "cut",
+      "caption": {
+        "text": "Premium beans cost pennies per cup.",
+        "style": "bold_center",
+        "appear_at_frame": 370,
+        "disappear_at_frame": 435
+      },
+      "broll_overlay": {
+        "enabled": true,
+        "type": "price_comparison_overlay"
+      },
+      "audio_note": "beat drop",
+      "clip_url": "https://www.w3schools.com/html/mov_bbb.mp4"
+    },
+    {
+      "scene_id": "scene_05",
+      "from_frame": 450,
+      "duration_frames": 150,
+      "clip_source": "shot_05",
+      "transition_in": "cut",
+      "transition_out": "fade",
+      "caption": {
+        "text": "Brew better. Spend less. Every day.",
+        "style": "bold_center",
+        "appear_at_frame": 460,
+        "disappear_at_frame": 585
+      },
+      "broll_overlay": {
+        "enabled": false,
+        "type": "none"
+      },
+      "audio_note": "fade out",
+      "clip_url": "https://www.w3schools.com/html/mov_bbb.mp4"
+    }
+  ],
+  "global_color_grade": "cold_tech",
+  "caption_font": "Inter Bold",
+  "music_mood": "cyber_noir"
+}
