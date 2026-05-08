@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { useStudio } from "@/lib/store";
 import Button from "@/components/ui/Button";
@@ -56,6 +56,33 @@ export default function DeliveryScreen() {
   const reset          = useStudio((s) => s.reset);
   const setStage       = useStudio((s) => s.setStage);
 
+  const [rendering, setRendering] = useState(false);
+  const [renderedUrl, setRenderedUrl] = useState<string | null>(null);
+  const [renderError, setRenderError] = useState<string | null>(null);
+
+  const handleRender = useCallback(async () => {
+    setRendering(true);
+    setRenderError(null);
+    try {
+      const res = await fetch("/api/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shots: deliveredShots, caption }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (err.fallback_url) { setRenderedUrl(err.fallback_url); return; }
+        throw new Error(err.error ?? `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      setRenderedUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      setRenderError(String(e));
+    } finally {
+      setRendering(false);
+    }
+  }, [deliveredShots, caption]);
+
   const firedRef = useRef(false);
   useEffect(() => {
     if (firedRef.current) return;
@@ -92,15 +119,18 @@ export default function DeliveryScreen() {
 
           {/* Left: video */}
           <div className="lg:col-span-1 flex justify-center">
-            {videoPath ? (
+            {renderedUrl ? (
               <div className="w-full max-w-xs">
-                <VideoPlayer src={videoPath} />
-                <div className="mt-3">
-                  <a href={videoPath} download>
+                <VideoPlayer src={renderedUrl} />
+                <div className="mt-3 space-y-2">
+                  <a href={renderedUrl} download="reel.mp4">
                     <Button variant="primary" size="sm" className="w-full">
                       DOWNLOAD MP4
                     </Button>
                   </a>
+                  <Button variant="ghost" size="sm" className="w-full" onClick={handleRender}>
+                    RE-RENDER
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -109,11 +139,24 @@ export default function DeliveryScreen() {
                 style={{ aspectRatio: "9/16" }}
               >
                 <p className="font-mono text-[11px] text-[var(--text-dim)]">
-                  Clips generated via Higgsfield
+                  {successCount} shot{successCount !== 1 ? "s" : ""} generated
                 </p>
-                <p className="font-mono text-[10px] text-[var(--text-dim)]">
-                  {successCount} shot{successCount !== 1 ? "s" : ""} ready
-                </p>
+                {renderError && (
+                  <p className="font-mono text-[10px] text-red-400">{renderError}</p>
+                )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleRender}
+                  disabled={rendering || successCount === 0}
+                >
+                  {rendering ? "ASSEMBLING..." : "ASSEMBLE & DOWNLOAD"}
+                </Button>
+                {videoPath && (
+                  <a href={videoPath} download>
+                    <Button variant="ghost" size="sm">DOWNLOAD RAW</Button>
+                  </a>
+                )}
               </div>
             )}
           </div>
