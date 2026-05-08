@@ -28,10 +28,9 @@ function sseEvent(event: string, data: unknown): string {
 }
 
 function buildSystemPrompt(context: SessionContext): string {
-  const model = process.env.HIGGSFIELD_MODEL ?? "cinematic_studio_3_0";
   return `You are an autonomous AI video production director for short-form social media.
 
-You have Higgsfield AI video generation tools. Produce the given concept completely — engineer all prompts yourself, generate every shot, and write caption copy.
+You have Higgsfield AI video generation tools. Produce the given concept completely — engineer all prompts yourself, select the best model, generate every shot, and write caption copy with voiceover script.
 
 SHOT PROMPT FORMULA — all elements required:
 SUBJECT + ACTION + ENVIRONMENT + LIGHTING + CAMERA MOVEMENT + MOOD + STYLE SUFFIX
@@ -39,33 +38,45 @@ SUBJECT + ACTION + ENVIRONMENT + LIGHTING + CAMERA MOVEMENT + MOOD + STYLE SUFFI
 SHOT RULES:
 - 4 shots total: shot_01 (setup 0–10s), shot_02 (tension 10–20s), shot_03 (payoff 20–30s), shot_04 (b-roll)
 - Each shot: duration 4, aspect_ratio "9:16"
-- Model: "${model}"
 - negative_prompt: "blurry, overexposed, amateur, shaky, text on screen, watermark"
 - Never repeat the same camera movement in consecutive shots
 - First shot must be visually arresting — the hook
 - Last shot must feel conclusive or loop-able
 
 WORKFLOW — do these steps in order:
-1. Think through each shot prompt based on the visual style and narrative arc
-2. Call generate_video for shot_01, note the job_id
-3. Call generate_video for shot_02, note the job_id
-4. Call generate_video for shot_03, note the job_id
-5. Call generate_video for shot_04, note the job_id
-6. Poll job_status for each job_id until status is "completed", "done", or "succeeded"
-7. For each completed job, call job_display to get the clip URL
-8. Write the caption copy
+1. Call models_explore with action "recommend" and provide the visual style + mood to select the best model for this brief. Note the model_id returned.
+2. Think through each shot prompt based on the visual style and narrative arc
+3. Call generate_video for shot_01 using the chosen model_id, note the job_id
+4. Call generate_video for shot_02 using the chosen model_id, note the job_id
+5. Call generate_video for shot_03 using the chosen model_id, note the job_id
+6. Call generate_video for shot_04 using the chosen model_id, note the job_id
+7. Poll job_status for each job_id until status is "completed", "done", or "succeeded"
+8. For each completed job, call job_display to get the clip URL
+9. Write the caption copy and voiceover script
+
+VOICEOVER SCRIPT RULES:
+- Write exact words for text-to-speech narration, under 50 words total
+- hook_line: first 3 seconds, grabs attention immediately — be specific and punchy
+- body_script: 2–3 short sentences, no filler words
+- outro_line: closing line or CTA spoken aloud
 
 Platform: ${context.platform ?? "Instagram"}${context.brand ? `\nBrand voice: ${context.brand}` : ""}${context.mood ? `\nMood/energy: ${context.mood}` : ""}
 
 FINAL JSON — end your response with exactly this block (no other text after it):
 \`\`\`json
 {
+  "model_used": "model_id_chosen_by_models_explore",
   "shots": [
     { "shot_id": "shot_01", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" },
     { "shot_id": "shot_02", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" },
     { "shot_id": "shot_03", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" },
     { "shot_id": "shot_04", "clip_url": "URL_HERE", "status": "success", "duration_seconds": 4, "thumbnail_url": "" }
   ],
+  "voiceover": {
+    "hook_line": "First 3 seconds — punchy spoken hook",
+    "body_script": "Main narration — 2-3 short punchy sentences",
+    "outro_line": "Closing line or spoken CTA"
+  },
   "caption": {
     "hook_line": "pattern-interrupt first line — specific and visual",
     "body_lines": ["expand the hook", "tension or revelation", "payoff or proof"],
@@ -134,6 +145,7 @@ export async function POST(req: NextRequest) {
           betas:      ["mcp-client-2025-04-04"],
           mcp_servers: [{
             type:                "url",
+            name:                "higgsfield",
             url:                 mcpUrl,
             authorization_token: apiKey,
           }],
@@ -186,7 +198,18 @@ export async function POST(req: NextRequest) {
           message: `${successCount}/${shots.length} shots generated`,
         }));
 
-        push(sseEvent("done", { shots, caption, concept, videoPath: "" }));
+        const voMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
+        let voiceover = null;
+        let modelUsed = "";
+        if (voMatch) {
+          try {
+            const p = JSON.parse(voMatch[1]);
+            voiceover = p.voiceover ?? null;
+            modelUsed = p.model_used ?? "";
+          } catch { /* ignore */ }
+        }
+
+        push(sseEvent("done", { shots, caption, voiceover, modelUsed, concept, videoPath: "" }));
 
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
