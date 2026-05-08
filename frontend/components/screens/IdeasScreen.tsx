@@ -140,7 +140,7 @@ export default function IdeasScreen() {
       const res = await fetch("/api/write-prompts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conceptIndex: selectedIndex, ideas, context }),
+        body: JSON.stringify({ concept: ideas[selectedIndex], context }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -164,7 +164,7 @@ export default function IdeasScreen() {
       const res = await fetch("/api/generate-ideas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(context),
+        body: JSON.stringify({ context }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
