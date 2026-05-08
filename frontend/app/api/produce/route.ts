@@ -43,16 +43,20 @@ SHOT RULES:
 - First shot must be visually arresting — the hook
 - Last shot must feel conclusive or loop-able
 
+MODEL SELECTION:
+- Default model: "kling3_0" — reliable, fast, cinematic quality
+- Only use models_explore if the brief clearly demands a specialist model
+- Never use seedance_2_0 — it is currently unavailable (500 errors)
+
 WORKFLOW — do these steps in order:
-1. Call models_explore with action "recommend" and provide the visual style + mood to select the best model for this brief. Note the model_id returned.
-2. Think through each shot prompt based on the visual style and narrative arc
-3. Call generate_video for shot_01 using the chosen model_id, note the job_id
-4. Call generate_video for shot_02 using the chosen model_id, note the job_id
-5. Call generate_video for shot_03 using the chosen model_id, note the job_id
-6. Call generate_video for shot_04 using the chosen model_id, note the job_id
-7. Poll job_status for each job_id until status is "completed", "done", or "succeeded"
-8. For each completed job, call job_display to get the clip URL
-9. Write the caption copy and voiceover script
+1. Think through each shot prompt based on the visual style and narrative arc
+2. Call generate_video for shot_01 with model "kling3_0", note the job_id
+3. Call generate_video for shot_02 with model "kling3_0", note the job_id
+4. Call generate_video for shot_03 with model "kling3_0", note the job_id
+5. Call generate_video for shot_04 with model "kling3_0", note the job_id
+6. Poll job_status for each job_id until status is "completed", "done", or "succeeded"
+7. For each completed job, call job_display to get the clip URL
+8. Write the caption copy and voiceover script
 
 VOICEOVER SCRIPT RULES:
 - Write exact words for text-to-speech narration, under 50 words total
