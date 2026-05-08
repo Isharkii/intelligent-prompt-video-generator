@@ -196,18 +196,20 @@ export default function ProducingScreen() {
 
               } else if (event === "done") {
                 const p = payload as {
-                  shots: GeneratedShot[];
-                  caption: CaptionCopy | null;
-                  concept: IdeaConcept;
+                  shots:     GeneratedShot[];
+                  caption:   CaptionCopy | null;
+                  voiceover: { hook_line: string; body_script: string; outro_line: string } | null;
+                  concept:   IdeaConcept;
                   videoPath: string;
                 };
                 setShots(p.shots ?? []);
                 setDone(true);
                 setDelivery({
-                  videoPath: p.videoPath ?? "",
-                  shots:     p.shots     ?? [],
-                  concept:   p.concept   ?? concept,
-                  caption:   p.caption   ?? null,
+                  videoPath: p.videoPath  ?? "",
+                  shots:     p.shots      ?? [],
+                  concept:   p.concept    ?? concept,
+                  caption:   p.caption    ?? null,
+                  voiceover: p.voiceover  ?? null,
                 });
                 setTimeout(() => setStage("delivery"), 1200);
 

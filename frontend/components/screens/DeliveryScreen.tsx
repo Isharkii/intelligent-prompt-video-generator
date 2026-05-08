@@ -53,6 +53,7 @@ export default function DeliveryScreen() {
   const deliveredShots = useStudio((s) => s.deliveredShots);
   const concept        = useStudio((s) => s.deliveredConcept);
   const caption        = useStudio((s) => s.deliveredCaption);
+  const voiceover      = useStudio((s) => s.deliveredVoiceover);
   const reset          = useStudio((s) => s.reset);
   const setStage       = useStudio((s) => s.setStage);
 
@@ -67,7 +68,7 @@ export default function DeliveryScreen() {
       const res = await fetch("/api/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shots: deliveredShots, caption }),
+        body: JSON.stringify({ shots: deliveredShots, caption, voiceover }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -227,6 +228,21 @@ export default function DeliveryScreen() {
                     <span key={h} className="font-mono text-[11px] text-[var(--text-dim)]">{h}</span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Voiceover script */}
+            {voiceover && (
+              <div className="card space-y-2">
+                <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
+                  Voiceover Script
+                </p>
+                <p className="font-mono text-[11px] text-amber">{voiceover.hook_line}</p>
+                <p className="font-mono text-[11px] text-[var(--text-muted)]">{voiceover.body_script}</p>
+                <p className="font-mono text-[11px] text-[var(--text-dim)]">{voiceover.outro_line}</p>
+                <p className="font-mono text-[9px] text-[var(--text-dim)] mt-1">
+                  Audio is added automatically if ElevenLabs key is configured.
+                </p>
               </div>
             )}
 

@@ -56,11 +56,13 @@ interface StudioStore {
   deliveredShots: GeneratedShot[];
   deliveredConcept: IdeaConcept | null;
   deliveredCaption: CaptionCopy | null;
+  deliveredVoiceover: { hook_line: string; body_script: string; outro_line: string } | null;
   setDelivery: (payload: {
     videoPath: string;
     shots: GeneratedShot[];
     concept: IdeaConcept;
     caption: CaptionCopy | null;
+    voiceover?: { hook_line: string; body_script: string; outro_line: string } | null;
   }) => void;
 
   // Error
@@ -109,12 +111,14 @@ export const useStudio = create<StudioStore>((set) => ({
   deliveredShots: [],
   deliveredConcept: null,
   deliveredCaption: null,
-  setDelivery: ({ videoPath, shots, concept, caption }) =>
+  deliveredVoiceover: null,
+  setDelivery: ({ videoPath, shots, concept, caption, voiceover }) =>
     set({
       videoPath,
-      deliveredShots:   shots,
-      deliveredConcept: concept,
-      deliveredCaption: caption,
+      deliveredShots:     shots,
+      deliveredConcept:   concept,
+      deliveredCaption:   caption,
+      deliveredVoiceover: voiceover ?? null,
     }),
 
   error: null,
@@ -134,9 +138,10 @@ export const useStudio = create<StudioStore>((set) => ({
       toolCalls:       [],
       produceStatus:   "",
       videoPath:       "",
-      deliveredShots:  [],
-      deliveredConcept: null,
-      deliveredCaption: null,
+      deliveredShots:     [],
+      deliveredConcept:   null,
+      deliveredCaption:   null,
+      deliveredVoiceover: null,
       error:           null,
     }),
 
