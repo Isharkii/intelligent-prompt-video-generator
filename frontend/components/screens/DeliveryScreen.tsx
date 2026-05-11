@@ -232,16 +232,31 @@ export default function DeliveryScreen() {
             )}
 
             {/* Voiceover script */}
-            {voiceover && (
+            {voiceover && (voiceover.shot_01 || voiceover.shot_02 || voiceover.shot_03) && (
               <div className="card space-y-2">
                 <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
-                  Voiceover Script
+                  Voiceover — Higgsfield Native Audio
                 </p>
-                <p className="font-mono text-[11px] text-amber">{voiceover.hook_line}</p>
-                <p className="font-mono text-[11px] text-[var(--text-muted)]">{voiceover.body_script}</p>
-                <p className="font-mono text-[11px] text-[var(--text-dim)]">{voiceover.outro_line}</p>
-                <p className="font-mono text-[9px] text-[var(--text-dim)] mt-1">
-                  Audio is added automatically if ElevenLabs key is configured.
+                {voiceover.shot_01 && (
+                  <div className="flex gap-2">
+                    <span className="font-mono text-[9px] text-[var(--text-dim)] w-14 shrink-0 pt-0.5">SHOT 01</span>
+                    <p className="font-mono text-[11px] text-amber">{voiceover.shot_01}</p>
+                  </div>
+                )}
+                {voiceover.shot_02 && (
+                  <div className="flex gap-2">
+                    <span className="font-mono text-[9px] text-[var(--text-dim)] w-14 shrink-0 pt-0.5">SHOT 02</span>
+                    <p className="font-mono text-[11px] text-[var(--text-muted)]">{voiceover.shot_02}</p>
+                  </div>
+                )}
+                {voiceover.shot_03 && (
+                  <div className="flex gap-2">
+                    <span className="font-mono text-[9px] text-[var(--text-dim)] w-14 shrink-0 pt-0.5">SHOT 03</span>
+                    <p className="font-mono text-[11px] text-[var(--text-dim)]">{voiceover.shot_03}</p>
+                  </div>
+                )}
+                <p className="font-mono text-[9px] text-[var(--text-dim)] mt-1 border-t border-[var(--border)] pt-2">
+                  Audio generated natively by Higgsfield — baked into each clip.
                 </p>
               </div>
             )}

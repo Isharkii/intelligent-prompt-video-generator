@@ -56,13 +56,13 @@ interface StudioStore {
   deliveredShots: GeneratedShot[];
   deliveredConcept: IdeaConcept | null;
   deliveredCaption: CaptionCopy | null;
-  deliveredVoiceover: { hook_line: string; body_script: string; outro_line: string } | null;
+  deliveredVoiceover: { shot_01?: string; shot_02?: string; shot_03?: string } | null;
   setDelivery: (payload: {
     videoPath: string;
     shots: GeneratedShot[];
     concept: IdeaConcept;
     caption: CaptionCopy | null;
-    voiceover?: { hook_line: string; body_script: string; outro_line: string } | null;
+    voiceover?: { shot_01?: string; shot_02?: string; shot_03?: string } | null;
   }) => void;
 
   // Error

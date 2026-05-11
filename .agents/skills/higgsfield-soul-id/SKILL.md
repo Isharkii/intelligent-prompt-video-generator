@@ -60,8 +60,8 @@ Before any other command:
 Once trained, pass to `higgsfield-generate`:
 
 ```bash
-higgsfield generate create text2image_soul_v2 --prompt "..." --soul-id <ref_id> --wait
-higgsfield generate create soul_cinema_studio --prompt "..." --soul-id <ref_id> --wait
+higgsfield generate create text2image_soul_v2 --prompt "..." --soul-id <ref_id> --quality 2k --wait
+higgsfield generate create soul_cinematic --prompt "..." --soul-id <ref_id> --quality 2k --wait
 ```
 
 ## Listing existing Souls

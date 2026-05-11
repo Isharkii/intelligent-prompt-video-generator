@@ -198,7 +198,7 @@ export default function ProducingScreen() {
                 const p = payload as {
                   shots:     GeneratedShot[];
                   caption:   CaptionCopy | null;
-                  voiceover: { hook_line: string; body_script: string; outro_line: string } | null;
+                  voiceover: { shot_01?: string; shot_02?: string; shot_03?: string } | null;
                   concept:   IdeaConcept;
                   videoPath: string;
                 };

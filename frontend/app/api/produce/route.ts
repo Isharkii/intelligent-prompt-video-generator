@@ -27,6 +27,7 @@ function sseEvent(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+
 function buildSystemPrompt(context: SessionContext): string {
   return `You are an autonomous AI video production director for short-form social media.
 
@@ -35,7 +36,7 @@ You have Higgsfield AI video generation tools. Generate 4 shots, then write capt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROMPT RULES — READ CAREFULLY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Formula: SUBJECT + ACTION + ENVIRONMENT + LIGHTING + CAMERA MOVEMENT + MOOD
+Formula: SUBJECT + ACTION + ENVIRONMENT + LIGHTING + CAMERA MOVEMENT + MOOD + VOICEOVER
 
 CRITICAL — what AI video models CAN and CANNOT do:
 ✓ CAN: people walking, gesturing, moving, handling objects, facial expressions
@@ -51,8 +52,15 @@ Translate abstract concepts into PHYSICAL, VISIBLE actions.
 
 SHOT STRUCTURE:
 - 4 shots: hook (0-8s), build (8-16s), payoff (16-24s), b-roll (24-30s)
-- Keep prompts under 60 words — shorter prompts produce more stable video
+- Keep visual description under 50 words — shorter prompts produce more stable video
 - No jargon: just vivid, specific, physical description
+
+VOICEOVER IN PROMPT — shots 01, 02, 03 only:
+- Write a spoken narration line of MAX 10 words per narrative shot (130 wpm × 5s ≈ 11 words)
+- Append it at the END of the shot prompt as: Voiceover: "[exact words to be spoken]"
+- Shot 04 (b-roll): NO Voiceover line — ambient sound only
+- The line must be concrete and punchy — no filler, no weak marketing phrases
+- Example: Voiceover: "This is what every founder gets wrong."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MODEL & PARAMS
@@ -62,7 +70,7 @@ Supported params ONLY: model, prompt, aspect_ratio, duration, mode, sound
 - aspect_ratio: "9:16"
 - duration: 5
 - mode: "pro"  ← always use pro for quality
-- sound: "off" ← we add our own audio
+- sound: "on"  ← Higgsfield native audio generation
 
 DO NOT pass: negative_prompt, genre, resolution, style — Kling 3.0 does not support these.
 
@@ -77,7 +85,7 @@ When calling generate_video, arguments MUST use this exact structure:
     "aspect_ratio": "9:16",
     "duration": 5,
     "mode": "pro",
-    "sound": "off"
+    "sound": "on"
   }
 }
 
@@ -90,14 +98,14 @@ When calling job_display, use:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WORKFLOW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Write all 4 shot prompts (people/objects/environments only — no text/screens)
-2. Call generate_video for shot_01 → get job_id
-3. Call generate_video for shot_02 → get job_id
-4. Call generate_video for shot_03 → get job_id
-5. Call generate_video for shot_04 → get job_id
+1. Write all 4 shot prompts — include Voiceover line for shots 01-03, omit for shot 04
+2. Call generate_video for shot_01 → get job_id  (prompt ends with Voiceover: "...")
+3. Call generate_video for shot_02 → get job_id  (prompt ends with Voiceover: "...")
+4. Call generate_video for shot_03 → get job_id  (prompt ends with Voiceover: "...")
+5. Call generate_video for shot_04 → get job_id  (no Voiceover — ambient sound only)
 6. Call job_status for each job_id with sync:true — wait until completed
 7. Call job_display for each completed job → get clip URL
-8. Write voiceover script and caption
+8. Write caption copy
 
 Platform: ${context.platform ?? "Instagram"}${context.brand ? `\nBrand: ${context.brand}` : ""}${context.mood ? `\nMood: ${context.mood}` : ""}
 
@@ -112,9 +120,9 @@ FINAL JSON — output this exact block at the end, nothing after it:
     { "shot_id": "shot_04", "clip_url": "URL", "status": "success", "duration_seconds": 5 }
   ],
   "voiceover": {
-    "hook_line": "First 3 seconds — punchy, specific, spoken aloud",
-    "body_script": "15-20 seconds of narration — 2-3 short sentences, no filler",
-    "outro_line": "Final CTA spoken aloud"
+    "shot_01": "Exact words spoken in shot 01 — max 10 words",
+    "shot_02": "Exact words spoken in shot 02 — max 10 words",
+    "shot_03": "Exact words spoken in shot 03 — max 10 words"
   },
   "caption": {
     "hook_line": "Pattern-interrupt opener — specific and visual",
@@ -216,16 +224,19 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Parse Claude's JSON output
+        // Parse Claude's JSON output — shots, caption, and voiceover all live in the same block
+        type VoiceoverScript = { shot_01?: string; shot_02?: string; shot_03?: string };
         const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
-        let shots:   GeneratedShot[] = [];
-        let caption: CaptionCopy | null = null;
+        let shots:    GeneratedShot[] = [];
+        let caption:  CaptionCopy | null = null;
+        let voiceover: VoiceoverScript | null = null;
 
         if (jsonMatch) {
           try {
             const parsed = JSON.parse(jsonMatch[1]);
-            shots   = (parsed.shots   as GeneratedShot[]) ?? [];
-            caption = (parsed.caption as CaptionCopy)     ?? null;
+            shots     = (parsed.shots     as GeneratedShot[])    ?? [];
+            caption   = (parsed.caption   as CaptionCopy)        ?? null;
+            voiceover = (parsed.voiceover as VoiceoverScript)    ?? null;
           } catch {
             push(sseEvent("progress", { status: "warning", message: "Could not parse Claude's JSON output" }));
           }
@@ -237,18 +248,7 @@ export async function POST(req: NextRequest) {
           message: `${successCount}/${shots.length} shots generated`,
         }));
 
-        const voMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
-        let voiceover = null;
-        let modelUsed = "";
-        if (voMatch) {
-          try {
-            const p = JSON.parse(voMatch[1]);
-            voiceover = p.voiceover ?? null;
-            modelUsed = p.model_used ?? "";
-          } catch { /* ignore */ }
-        }
-
-        push(sseEvent("done", { shots, caption, voiceover, modelUsed, concept, videoPath: "" }));
+        push(sseEvent("done", { shots, caption, voiceover, concept, videoPath: "" }));
 
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

@@ -65,14 +65,14 @@ ${bannedPhrases.join(", ")}
 REAL PROMPT EXAMPLES — match this quality and style:
 ${csvSystemExamples}
 
-DIVERSITY RULES — enforce all four:
-1. Exactly ONE concept must be counterintuitive: its virality_reasoning must contain "counterintuitive" or "challenges"
-2. Exactly ONE must use a trending platform format (duet, POV, day-in-the-life, reaction, etc.)
-3. Exactly ONE must be purely visual-led — minimal or no text, maximum imagery
+DIVERSITY RULES — enforce all three (one rule per concept):
+1. Concept 1 must be counterintuitive: its virality_reasoning must contain "counterintuitive" or "challenges"
+2. Concept 2 must use a trending platform format (duet, POV, day-in-the-life, reaction, etc.)
+3. Concept 3 must be purely visual-led — minimal or no text, maximum imagery
 4. No two concepts may share the same visual_style or the same target_emotion
 
 OUTPUT FORMAT:
-- Return ONLY a valid JSON array of 4 IdeaConcept objects
+- Return ONLY a valid JSON array of exactly 3 IdeaConcept objects
 - No markdown fences, no preamble, no trailing text
 - Every field in the schema is required`;
 }
@@ -91,7 +91,7 @@ ${session.reference? `- Reference: ${session.reference}`: ""}
 TRAINING EXAMPLES (use as visual taste reference — do not copy verbatim):
 ${csvExamples}
 
-Return a JSON array of exactly 4 concepts. Each object must follow this schema:
+Return a JSON array of exactly 3 concepts. Each object must follow this schema:
 {
   "id": "concept_01",
   "title": "five word punchy title",
@@ -391,15 +391,15 @@ export async function POST(req: NextRequest) {
       : buildConceptUserPrompt(context, csvExamples);
 
     // Call 1: Generate concepts
-    let concepts = (await callConceptApi(client, systemPrompt, userPrompt)).slice(0, 4);
+    let concepts = (await callConceptApi(client, systemPrompt, userPrompt)).slice(0, 3);
 
     // Quality gate — retry once with explicit fixes
     const allIssues = [...enforceDiversityRules(concepts), ...checkBannedContent(concepts)];
     if (allIssues.length > 0) {
-      concepts = (await callConceptApi(client, systemPrompt, userPrompt, allIssues.join("\n"))).slice(0, 4);
+      concepts = (await callConceptApi(client, systemPrompt, userPrompt, allIssues.join("\n"))).slice(0, 3);
     }
 
-    // Calls 2–5 (parallel): Script per concept, with retry and placeholder fallback
+    // Calls 2–4 (parallel): Script per concept, with retry and placeholder fallback
     const scripts = await Promise.allSettled(
       concepts.map((c) => generateScriptWithRetry(client, c, context))
     );
