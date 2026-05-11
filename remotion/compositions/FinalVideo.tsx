@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Sequence, useVideoConfig } from "remotion";
+import { AbsoluteFill, Sequence } from "remotion";
 import type { RemotionScenePlan } from "../../src/types";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { BRollScene } from "./BRollScene";
@@ -16,7 +16,6 @@ interface FinalVideoProps {
 }
 
 export const FinalVideo: React.FC<FinalVideoProps> = ({ config }) => {
-  useVideoConfig();
   const gradeFilter = COLOR_GRADES[config.global_color_grade] ?? COLOR_GRADES.warm_cinematic;
 
   return (

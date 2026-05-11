@@ -200,12 +200,11 @@ export default function ProducingScreen() {
                   caption:   CaptionCopy | null;
                   voiceover: { shot_01?: string; shot_02?: string; shot_03?: string } | null;
                   concept:   IdeaConcept;
-                  videoPath: string;
                 };
                 setShots(p.shots ?? []);
                 setDone(true);
                 setDelivery({
-                  videoPath: p.videoPath  ?? "",
+                  videoPath: "",
                   shots:     p.shots      ?? [],
                   concept:   p.concept    ?? concept,
                   caption:   p.caption    ?? null,

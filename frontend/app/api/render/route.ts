@@ -5,7 +5,7 @@
  * ffmpeg.wasm. If ELEVENLABS_API_KEY is set, generates voiceover audio
  * and mixes it into the final video.
  *
- * Body: { shots: GeneratedShot[], voiceover?: { hook_line, body_script, outro_line }, caption?: CaptionCopy }
+ * Body: { shots: GeneratedShot[], voiceover?: { shot_01?, shot_02?, shot_03? }, caption?: CaptionCopy }
  * Returns: MP4 stream
  */
 
@@ -18,9 +18,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 interface VoiceoverScript {
-  hook_line: string;
-  body_script: string;
-  outro_line: string;
+  shot_01?: string;
+  shot_02?: string;
+  shot_03?: string;
 }
 
 async function generateVoiceover(script: VoiceoverScript): Promise<Uint8Array | null> {
@@ -30,7 +30,7 @@ async function generateVoiceover(script: VoiceoverScript): Promise<Uint8Array | 
 
   if (!apiKey || apiKey === "your_elevenlabs_key_here") return null;
 
-  const fullText = [script.hook_line, script.body_script, script.outro_line]
+  const fullText = [script.shot_01, script.shot_02, script.shot_03]
     .filter(Boolean).join(" ");
 
   const res = await fetch(
@@ -61,9 +61,9 @@ async function generateVoiceover(script: VoiceoverScript): Promise<Uint8Array | 
 
 export async function POST(req: NextRequest) {
   const body = await req.json() as {
-    shots:     GeneratedShot[];
+    shots:      GeneratedShot[];
     voiceover?: VoiceoverScript;
-    caption?:  CaptionCopy;
+    caption?:   CaptionCopy;
   };
   const { shots, voiceover } = body;
 
@@ -93,10 +93,7 @@ export async function POST(req: NextRequest) {
     // Generate voiceover if ElevenLabs key is available
     const audioData = voiceover ? await generateVoiceover(voiceover) : null;
 
-    let outputArgs: string[];
-
     if (audioData) {
-      // Write audio file and mix with video
       await ffmpeg.writeFile("voiceover.mp3", audioData);
       await ffmpeg.exec([
         "-f", "concat", "-safe", "0", "-i", "list.txt",
@@ -107,19 +104,14 @@ export async function POST(req: NextRequest) {
         "-movflags", "+faststart",
         "output.mp4",
       ]);
-      outputArgs = [];
     } else {
-      // No audio — simple concat, copy streams
       await ffmpeg.exec([
         "-f", "concat", "-safe", "0", "-i", "list.txt",
         "-c", "copy",
         "-movflags", "+faststart",
         "output.mp4",
       ]);
-      outputArgs = [];
     }
-
-    void outputArgs; // unused, kept for clarity
 
     const raw  = await ffmpeg.readFile("output.mp4");
     const data = raw instanceof Uint8Array ? raw : new Uint8Array(raw as unknown as ArrayBuffer);

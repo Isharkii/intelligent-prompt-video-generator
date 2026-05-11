@@ -6,6 +6,8 @@ import {
   interpolate,
 } from "remotion";
 import type { RemotionScene } from "../../src/types";
+import { ZoomPan }              from "./ZoomPan";
+import { MotionGraphicsLayer }  from "./MotionGraphicsLayer";
 
 interface BRollSceneProps {
   scene: RemotionScene;
@@ -164,30 +166,40 @@ export const BRollScene: React.FC<BRollSceneProps> = ({ scene }) => {
   const bgColor    = SCENE_COLORS[sceneIndex % SCENE_COLORS.length];
   const clipUrl    = scene.clip_url || "";
 
+  const zoomPanCfg = scene.motion_graphics?.zoom_pan;
+
+  const videoElement = clipUrl ? (
+    /*
+     * CAUSE 3 FIX: key={scene.scene_id} forces React to unmount and remount
+     *   the Video element for every scene, even when two scenes share the same
+     *   src URL (e.g. in mock mode). Without this React reuses the underlying
+     *   DOM <video> element and the clip never resets.
+     *
+     * CAUSE 4 FIX: startFrom={0} tells Remotion to seek to frame 0 of the
+     *   source clip at the start of this Sequence. Without it, Remotion uses
+     *   the last playback position from a previous render of the same src, so
+     *   all scenes appear to loop the same clip.
+     *
+     *   endAt={scene.duration_frames} prevents the clip from continuing to play
+     *   past the scene boundary (clip overflow into the next scene).
+     */
+    <Video
+      key={scene.scene_id}
+      src={clipUrl}
+      startFrom={0}
+      endAt={scene.duration_frames}
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    />
+  ) : null;
+
   return (
     <AbsoluteFill style={{ overflow: "hidden", ...transitionStyle }}>
       {clipUrl ? (
-        /*
-         * CAUSE 3 FIX: key={scene.scene_id} forces React to unmount and remount
-         *   the Video element for every scene, even when two scenes share the same
-         *   src URL (e.g. in mock mode). Without this React reuses the underlying
-         *   DOM <video> element and the clip never resets.
-         *
-         * CAUSE 4 FIX: startFrom={0} tells Remotion to seek to frame 0 of the
-         *   source clip at the start of this Sequence. Without it, Remotion uses
-         *   the last playback position from a previous render of the same src, so
-         *   all scenes appear to loop the same clip.
-         *
-         *   endAt={scene.duration_frames} prevents the clip from continuing to play
-         *   past the scene boundary (clip overflow into the next scene).
-         */
-        <Video
-          key={scene.scene_id}
-          src={clipUrl}
-          startFrom={0}
-          endAt={scene.duration_frames}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+        zoomPanCfg ? (
+          <ZoomPan config={zoomPanCfg} durationFrames={scene.duration_frames}>{videoElement}</ZoomPan>
+        ) : (
+          videoElement
+        )
       ) : (
         <AbsoluteFill
           style={{
@@ -241,6 +253,10 @@ export const BRollScene: React.FC<BRollSceneProps> = ({ scene }) => {
           frame={frame}
           durationFrames={scene.duration_frames}
         />
+      )}
+
+      {scene.motion_graphics && scene.motion_graphics.overlays.length > 0 && (
+        <MotionGraphicsLayer config={scene.motion_graphics} />
       )}
     </AbsoluteFill>
   );

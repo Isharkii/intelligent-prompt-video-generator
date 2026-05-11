@@ -264,7 +264,6 @@ const DEBUG = process.env.DEBUG_CAPTIONS === "true";
 
 export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({ caption }) => {
   const frame = useCurrentFrame();
-  useVideoConfig();
 
   if (!caption) return null;
   const { text, style, appear_at_frame, disappear_at_frame } = caption;

@@ -182,8 +182,9 @@ export function selectRelevantExamples(
     return { row, score };
   });
 
-  return scored
-    .filter((s) => s.score > 0)
+  const filtered = scored.filter((s) => s.score > 0);
+  // Fall back to full set (sorted by score desc) when no keyword matches — never return empty
+  return (filtered.length > 0 ? filtered : scored)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((s) => s.row);

@@ -19,7 +19,7 @@ import {
 } from "@/lib/server/training";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 // ─── Mood → CSV category mapping ─────────────────────────────────────────────
 
@@ -207,7 +207,9 @@ function getClient(): Anthropic {
 }
 
 function cleanJson(text: string): string {
-  return text.trim().replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
+  // Extract content from inside a ```json ... ``` block if present; otherwise use raw text
+  const fenced = text.match(/```json\s*([\s\S]*?)\s*```/i);
+  return fenced ? fenced[1].trim() : text.trim();
 }
 
 async function callConceptApi(

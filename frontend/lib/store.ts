@@ -145,13 +145,4 @@ export const useStudio = create<StudioStore>((set) => ({
       error:           null,
     }),
 
-  // Legacy — kept so existing code compiles
-  stageProgress: {} as never,
-  shotStatuses: [] as never,
-  logLines: [] as never,
-  currentFrame: 0,
-  totalFrames: 0,
-  updateProgress: () => { /* no-op */ },
-  setFrame: () => { /* no-op */ },
-  appendLog: () => { /* no-op */ },
 }));

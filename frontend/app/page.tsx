@@ -86,14 +86,16 @@ function Header() {
       <StageIndicator current={stage} />
 
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => setStage(stage === "training" ? "input" : "training")}
-          className={`font-mono text-[11px] tracking-widest transition-colors hidden sm:block ${
-            stage === "training" ? "text-amber" : "text-[var(--text-dim)] hover:text-[var(--text-muted)]"
-          }`}
-        >
-          {stage === "training" ? "← BACK" : "TRAINING"}
-        </button>
+        {process.env.NEXT_PUBLIC_API_URL && (
+          <button
+            onClick={() => setStage(stage === "training" ? "input" : "training")}
+            className={`font-mono text-[11px] tracking-widest transition-colors hidden sm:block ${
+              stage === "training" ? "text-amber" : "text-[var(--text-dim)] hover:text-[var(--text-muted)]"
+            }`}
+          >
+            {stage === "training" ? "← BACK" : "TRAINING"}
+          </button>
+        )}
         <span className="font-mono text-[10px] text-[var(--text-dim)] hidden sm:block">v3.0</span>
       </div>
     </header>

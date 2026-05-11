@@ -82,7 +82,7 @@ export default function DeliveryScreen() {
     } finally {
       setRendering(false);
     }
-  }, [deliveredShots, caption]);
+  }, [deliveredShots, caption, voiceover]);
 
   const firedRef = useRef(false);
   useEffect(() => {

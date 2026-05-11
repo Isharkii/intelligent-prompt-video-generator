@@ -101,6 +101,40 @@ export interface CaptionCopy {
   caption_style: "punchy" | "storytelling" | "educational" | "contrarian";
 }
 
+export interface ZoomPanConfig {
+  direction: "in" | "in_left" | "in_right" | "in_up" | "in_down";
+  intensity: number;
+}
+
+export interface ParticleOverlayConfig  { count: number; color: string; opacity: number }
+export interface LogoRevealConfig       { logoUrl?: string; text: string; tagline?: string }
+export interface CTACardConfig          { text: string; ctaText: string; position?: "bottom" | "center" }
+export interface StatPopupConfig        { value: number; label: string; prefix?: string; suffix?: string }
+export interface SubtitleLine          { text: string; from_frame: number; to_frame: number }
+export interface SubtitleTrackConfig    { lines: SubtitleLine[] }
+export interface UIAnimationConfig      { frameType: "phone" | "browser"; content: string }
+export interface CursorWaypoint        { x: number; y: number; frame: number }
+export interface CursorDemoConfig       { waypoints: CursorWaypoint[]; clickFrames?: number[] }
+export interface ChartData             { label: string; value: number; color?: string }
+export interface ChartConfig           { type: "bar" | "line"; data: ChartData[]; title?: string }
+export interface KineticTypographyConfig { text: string; style: "word_pop" | "typewriter" | "slide_up" | "split" }
+
+export type MotionGraphicOverlay =
+  | { type: "particle";     config: ParticleOverlayConfig;    appear_at_frame: number; disappear_at_frame: number }
+  | { type: "logo_reveal";  config: LogoRevealConfig;          appear_at_frame: number; disappear_at_frame: number }
+  | { type: "cta_card";     config: CTACardConfig;             appear_at_frame: number; disappear_at_frame: number }
+  | { type: "stat_popup";   config: StatPopupConfig;           appear_at_frame: number; disappear_at_frame: number }
+  | { type: "subtitle";     config: SubtitleTrackConfig;       appear_at_frame: number; disappear_at_frame: number }
+  | { type: "kinetic_type"; config: KineticTypographyConfig;   appear_at_frame: number; disappear_at_frame: number }
+  | { type: "ui_anim";      config: UIAnimationConfig;         appear_at_frame: number; disappear_at_frame: number }
+  | { type: "cursor";       config: CursorDemoConfig;          appear_at_frame: number; disappear_at_frame: number }
+  | { type: "chart";        config: ChartConfig;               appear_at_frame: number; disappear_at_frame: number };
+
+export interface MotionGraphicsConfig {
+  zoom_pan?: ZoomPanConfig;
+  overlays: MotionGraphicOverlay[];
+}
+
 export interface GeneratedShot {
   shot_id: string;
   clip_url: string;
@@ -108,6 +142,7 @@ export interface GeneratedShot {
   duration_seconds: number;
   status: "success" | "failed" | "skipped";
   error?: string;
+  motion_graphics?: MotionGraphicsConfig;
 }
 
 export interface TrainingPromptRow {
@@ -148,8 +183,8 @@ export interface ProgressEvent {
 }
 
 export interface DoneEvent {
-  videoPath: string;
-  caption: CaptionCopy;
+  caption: CaptionCopy | null;
+  voiceover: { shot_01?: string; shot_02?: string; shot_03?: string } | null;
   shots: GeneratedShot[];
   concept: IdeaConcept;
 }
