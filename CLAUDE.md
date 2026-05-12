@@ -31,6 +31,18 @@ Banned combinations: camera push-in + subject walking, orbit + multi-character i
 - Duration: 4 seconds per clip (not 5). 4s clips have significantly better temporal stability.
 - Voiceover line appended to prompt: 8 words max at 130 wpm.
 
+**Rule 6 — No readable text on screens or displays.**
+AI video models hallucinate gibberish whenever a prompt describes text on a screen.
+- NEVER write: "slide showing…", "screen with the words…", "presentation displaying stats/copy", "title card", "big screen with text".
+- INSTEAD describe mood/colour only: "glowing laptop with vivid coloured slides", "large backlit display with soft warm light".
+- Any real words, stats, or copy that must appear → use a Remotion `subtitle` or `cta_card` overlay, not the AI video prompt.
+
+**Rule 7 — No brand names in AI video prompts.**
+AI video models misspell brand names without exception (e.g. "Pitchworx" rendered as "pithworrx").
+- NEVER include the brand name as visible on-screen text in a Higgsfield prompt.
+- Brand name appears ONLY via Remotion motion graphics: `cta_card` or `logo_reveal` config fields.
+- To convey brand presence in a shot, describe colour palette, visual style, and premium feel — never the spelled-out name.
+
 ---
 
 ## DEFAULT BEHAVIOUR — READ THIS FIRST (overrides all other sections)

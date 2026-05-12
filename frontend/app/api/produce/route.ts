@@ -70,6 +70,18 @@ RULE 4 — Scene and environment simplicity
 RULE 5 — Prompt length: 30–40 words maximum (excluding Voiceover line)
 One subject. One setting. One light source. One motion. That is the whole prompt.
 
+RULE 6 — NO readable text on screens or displays (hard ban)
+AI video models CANNOT render coherent text. They hallucinate gibberish every time.
+✗ NEVER write: "presentation slide showing...", "laptop screen with text", "slide with the words...", "title card", "big screen displaying data/stats/copy"
+✓ INSTEAD describe mood/colour only: "glowing laptop screen with vivid coloured slides", "large backlit display with abstract warm light", "premium screen emitting soft blue glow"
+Any actual words, stats, or copy that must appear on screen → use a Remotion subtitle/cta_card overlay, NOT the AI video prompt.
+
+RULE 7 — NO brand names in AI video prompts (hard ban)
+AI video models misspell brand names without exception (e.g. "Pitchworx" → "pithworrx").
+✗ NEVER include the brand name as text that the AI model would render visually in the shot.
+✓ Brand name ONLY appears via Remotion overlays: cta_card or logo_reveal config fields.
+If the shot needs brand presence, show a person/object in a branded environment — describe colour, style, premium feel — never the spelled-out name.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROMPT FORMULA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -79,11 +91,13 @@ WHAT AI VIDEO MODELS CAN AND CANNOT DO:
 ✓ CAN: person standing still, subtle facial expression, slow breathing, holding an object
 ✓ CAN: environmental mood — softly lit room, window light, clean studio, golden hour
 ✓ CAN: one slow camera motion — drift, slow pan, locked off
-✗ CANNOT: readable text on screens, charts, graphs, data displays
+✗ CANNOT: readable text on screens, charts, graphs, data displays — always gibberish
+✗ CANNOT: spell brand names correctly — always hallucinated/misspelled
 ✗ CANNOT: complex lip sync or multi-person simultaneous movement
 
 Translate every abstract concept into a single physical, visible, nearly-static scene.
 "Pitch deck" → one person standing confidently, looking at camera, premium room, locked-off shot.
+"Laptop screen" → glowing premium laptop emitting warm coloured light, no described text content.
 
 SHOT STRUCTURE (4 shots × 4 seconds = 16s total):
 - Shot 01 hook:    Single strong image — one subject, locked camera, visual scroll-stopper
