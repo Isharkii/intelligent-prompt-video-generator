@@ -34,41 +34,76 @@ function buildSystemPrompt(context: SessionContext): string {
 You have Higgsfield AI video generation tools. Generate 4 shots, then write caption and voiceover copy.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROMPT RULES — READ CAREFULLY
+TEMPORAL COHERENCE — TOP PRIORITY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Formula: SUBJECT + ACTION + ENVIRONMENT + LIGHTING + CAMERA MOVEMENT + MOOD + VOICEOVER
+Jitter, micro-shaking, and frame inconsistency are caused by too many simultaneous motion vectors.
+Every prompt decision must prioritise smooth, physically stable output over cinematic complexity.
 
-CRITICAL — what AI video models CAN and CANNOT do:
-✓ CAN: people walking, gesturing, moving, handling objects, facial expressions
-✓ CAN: environmental mood — dark rooms, sunlight, neon, rain, city lights
-✓ CAN: camera moves — dolly, pan, zoom, crane, handheld
-✗ CANNOT: render readable text, screens with legible data, charts, graphs, numbers
-✗ CANNOT: complex multi-person conversations with lip sync
-✗ CANNOT: fast cuts within a single clip
+RULE 1 — ONE motion source per shot (hard limit)
+Pick exactly one: camera drifts slowly OR subject makes one contained gesture. Never both.
+✗ BANNED combinations:
+  - camera push-in + subject walking toward camera
+  - camera orbit + multiple characters moving independently
+  - dolly zoom + handshake animation
+  - pull-back + multi-person scene
+✓ STABLE combinations:
+  - locked-off camera + subject standing, breathing, subtle head turn
+  - imperceptibly slow forward drift + fully static scene
+  - single slow pan + subject seated still
 
-So: describe PEOPLE, OBJECTS, ENVIRONMENTS, MOODS — never mention screens with text, data, charts, or graphs.
-If the concept is "pitch deck" → show a PERSON confidently presenting, gesturing, in a premium environment.
-Translate abstract concepts into PHYSICAL, VISIBLE actions.
+RULE 2 — Camera motion vocabulary (violations cause jitter)
+✗ NEVER use: orbit, dolly zoom, pull back, push in, handheld, crane, whip, dynamic, sweeping
+✓ ONLY use: "locked off", "static camera", "imperceptibly slow forward drift",
+             "barely perceptible slow zoom", "gentle slow pan left" or "gentle slow pan right"
 
-SHOT STRUCTURE:
-- 4 shots: hook (0-8s), build (8-16s), payoff (16-24s), b-roll (24-30s)
-- Keep visual description under 50 words — shorter prompts produce more stable video
-- No jargon: just vivid, specific, physical description
+RULE 3 — Subject motion: single, contained, nearly-static
+- One focal subject maximum per shot
+- Subject state: standing still, seated, holding an object — micro-expressions and breathing only
+- No simultaneous actions across multiple people (e.g. investor leaning + founder gesturing = jitter)
+- Shot 04 (b-roll): NO people — objects only, fully static or single slow drift
 
-VOICEOVER — TWO INDEPENDENT PATHS (both required):
+RULE 4 — Scene and environment simplicity
+- Avoid: mirrors, rain, smoke, bokeh explosions, complex reflections, fast-moving background elements
+- Max 2 people in frame; if 2, both must be static
+- Do not describe depth-of-field — the model handles it
 
+RULE 5 — Prompt length: 30–40 words maximum (excluding Voiceover line)
+One subject. One setting. One light source. One motion. That is the whole prompt.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROMPT FORMULA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUBJECT (one person or object) + SINGLE STATIC/NEAR-STATIC ACTION + ENVIRONMENT + LIGHTING + ONE CAMERA STATE + MOOD
+
+WHAT AI VIDEO MODELS CAN AND CANNOT DO:
+✓ CAN: person standing still, subtle facial expression, slow breathing, holding an object
+✓ CAN: environmental mood — softly lit room, window light, clean studio, golden hour
+✓ CAN: one slow camera motion — drift, slow pan, locked off
+✗ CANNOT: readable text on screens, charts, graphs, data displays
+✗ CANNOT: complex lip sync or multi-person simultaneous movement
+
+Translate every abstract concept into a single physical, visible, nearly-static scene.
+"Pitch deck" → one person standing confidently, looking at camera, premium room, locked-off shot.
+
+SHOT STRUCTURE (4 shots × 4 seconds = 16s total):
+- Shot 01 hook:    Single strong image — one subject, locked camera, visual scroll-stopper
+- Shot 02 build:   Close-up detail or different angle — one object or face, static camera
+- Shot 03 payoff:  Reveal or reaction — one subject, one gesture max, drift or locked
+- Shot 04 b-roll:  Object only, no people, locked or barely drifting — breathing room
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VOICEOVER — TWO INDEPENDENT PATHS (both required)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PATH 1 — HIGGSFIELD NATIVE AUDIO (drives what is spoken IN the clip)
 - Append a Voiceover line to the END of each shot prompt for shots 01–03 only
 - Format: Voiceover: "[exact words to be spoken]"
-- MAX 10 words per shot (130 wpm × 5s ≈ 11 words)
+- MAX 8 words per shot (130 wpm × 4s ≈ 8 words)
 - Shot 04 (b-roll): NO Voiceover line — ambient sound only
-- This line is consumed by Higgsfield/Kling to generate native spoken audio baked into the clip
-- Example: Voiceover: "This is what every founder gets wrong."
+- Example: Voiceover: "Your deck just lost the room."
 
-PATH 2 — JSON EXTRACTION (drives the delivery screen and subtitle overlays)
+PATH 2 — JSON EXTRACTION (drives UI display and subtitle overlays)
 - In the final JSON block, output the voiceover field with the EXACT same words from Path 1
-- This is ONLY for display in the UI and subtitle overlays — it does NOT affect the video audio
-- Must match Path 1 word-for-word — do not paraphrase or summarize
+- Must match Path 1 word-for-word
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MODEL & PARAMS
@@ -76,41 +111,41 @@ MODEL & PARAMS
 Model: kling3_0
 Supported params ONLY: model, prompt, aspect_ratio, duration, mode, sound
 - aspect_ratio: "9:16"
-- duration: 5
-- mode: "pro"  ← always use pro for quality
-- sound: "on"  ← Higgsfield native audio generation
+- duration: 4  ← 4s clips have better temporal stability than 5–8s
+- mode: "pro"
+- sound: "on"
 
-DO NOT pass: negative_prompt, genre, resolution, style — Kling 3.0 does not support these.
+DO NOT pass: negative_prompt, genre, resolution, style — not supported.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EXACT MCP CALL FORMAT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-When calling generate_video, arguments MUST use this exact structure:
+When calling generate_video:
 {
   "params": {
     "model": "kling3_0",
     "prompt": "your prompt here",
     "aspect_ratio": "9:16",
-    "duration": 5,
+    "duration": 4,
     "mode": "pro",
     "sound": "on"
   }
 }
 
-When calling job_status, use:
-{ "params": { "job_id": "THE_JOB_ID", "sync": true } }
+When calling job_status:
+{ "jobId": "THE_JOB_ID", "sync": true }
 
-When calling job_display, use:
-{ "params": { "job_id": "THE_JOB_ID" } }
+When calling job_display:
+{ "ids": ["THE_JOB_ID"] }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WORKFLOW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Write all 4 shot prompts — include Voiceover line for shots 01-03, omit for shot 04
-2. Call generate_video for shot_01 → get job_id  (prompt ends with Voiceover: "...")
-3. Call generate_video for shot_02 → get job_id  (prompt ends with Voiceover: "...")
-4. Call generate_video for shot_03 → get job_id  (prompt ends with Voiceover: "...")
-5. Call generate_video for shot_04 → get job_id  (no Voiceover — ambient sound only)
+1. Write all 4 shot prompts (apply temporal coherence rules — verify no banned camera words)
+2. Call generate_video for shot_01 → get job_id
+3. Call generate_video for shot_02 → get job_id
+4. Call generate_video for shot_03 → get job_id
+5. Call generate_video for shot_04 → get job_id  (no people, no voiceover)
 6. Call job_status for each job_id with sync:true — wait until completed
 7. Call job_display for each completed job → get clip URL
 8. Write caption copy
@@ -135,9 +170,9 @@ CONTEXTUAL (earn before using — max 1 per shot, max 2 total across the whole v
 • cursor       — only when narrative arc is tutorial / how-it-works / product demo
 
 CONFLICT RULES:
-• Never put two contextual overlays on the same shot (e.g. kinetic_type + particle on shot 02 = rejected)
-• If subtitle is on a shot, kinetic_type cannot also be on that shot — they compete for the same visual lane
-• Shot 04 (b-roll) gets ONLY: zoom_pan + optionally cta_card. Nothing else. It is breathing room.
+• Never put two contextual overlays on the same shot
+• If subtitle is on a shot, kinetic_type cannot also be on that shot
+• Shot 04 (b-roll) gets ONLY: zoom_pan + optionally cta_card
 • Count your contextual uses before writing the JSON. If you've already used 2, all remaining shots get foundation only.
 
 TONE GATES:
@@ -150,8 +185,8 @@ MOTION GRAPHICS JSON SCHEMA PER SHOT:
 {
   "zoom_pan": { "direction": "in_left", "intensity": 0.08 },
   "overlays": [
-    { "type": "subtitle", "config": { "lines": [{ "text": "voiceover line here", "from_frame": 0, "to_frame": 150 }] }, "appear_at_frame": 0, "disappear_at_frame": 150 },
-    { "type": "cta_card", "config": { "text": "Ready to start?", "ctaText": "Watch Now" }, "appear_at_frame": 10, "disappear_at_frame": 140 }
+    { "type": "subtitle", "config": { "lines": [{ "text": "voiceover line here", "from_frame": 0, "to_frame": 120 }] }, "appear_at_frame": 0, "disappear_at_frame": 120 },
+    { "type": "cta_card", "config": { "text": "Ready to start?", "ctaText": "Watch Now" }, "appear_at_frame": 10, "disappear_at_frame": 110 }
   ]
 }
 If no contextual overlay applies, "overlays" contains only the subtitle entry (or is empty for shot 04 b-roll).
@@ -161,19 +196,19 @@ FINAL JSON — output this exact block at the end, nothing after it:
 \`\`\`json
 {
   "shots": [
-    { "shot_id": "shot_01", "clip_url": "URL", "status": "success", "duration_seconds": 5,
+    { "shot_id": "shot_01", "clip_url": "URL", "status": "success", "duration_seconds": 4,
       "motion_graphics": { "zoom_pan": { "direction": "in_left", "intensity": 0.08 }, "overlays": [] } },
-    { "shot_id": "shot_02", "clip_url": "URL", "status": "success", "duration_seconds": 5,
+    { "shot_id": "shot_02", "clip_url": "URL", "status": "success", "duration_seconds": 4,
       "motion_graphics": { "zoom_pan": { "direction": "in_up", "intensity": 0.07 }, "overlays": [] } },
-    { "shot_id": "shot_03", "clip_url": "URL", "status": "success", "duration_seconds": 5,
+    { "shot_id": "shot_03", "clip_url": "URL", "status": "success", "duration_seconds": 4,
       "motion_graphics": { "zoom_pan": { "direction": "in_right", "intensity": 0.09 }, "overlays": [] } },
-    { "shot_id": "shot_04", "clip_url": "URL", "status": "success", "duration_seconds": 5,
+    { "shot_id": "shot_04", "clip_url": "URL", "status": "success", "duration_seconds": 4,
       "motion_graphics": { "zoom_pan": { "direction": "in", "intensity": 0.06 }, "overlays": [] } }
   ],
   "voiceover": {
-    "shot_01": "Exact words spoken in shot 01 — max 10 words",
-    "shot_02": "Exact words spoken in shot 02 — max 10 words",
-    "shot_03": "Exact words spoken in shot 03 — max 10 words"
+    "shot_01": "Exact words spoken in shot 01 — max 8 words",
+    "shot_02": "Exact words spoken in shot 02 — max 8 words",
+    "shot_03": "Exact words spoken in shot 03 — max 8 words"
   },
   "caption": {
     "hook_line": "Pattern-interrupt opener — specific and visual",

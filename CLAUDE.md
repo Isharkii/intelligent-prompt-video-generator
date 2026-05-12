@@ -2,6 +2,37 @@
 
 ---
 
+## HIGGSFIELD SHOT PROMPT RULES — TEMPORAL COHERENCE (highest priority, overrides everything)
+
+Jitter, micro-shaking, and frame inconsistency are caused by too many simultaneous motion vectors.
+Every Higgsfield prompt must obey all 5 rules below without exception.
+
+**Rule 1 — ONE motion source per shot.**
+Pick exactly one: either the camera moves slightly OR the subject moves slightly. Never both.
+Banned combinations: camera push-in + subject walking, orbit + multi-character interaction, dolly zoom + handshake, pullback + multi-person group.
+
+**Rule 2 — Allowed camera vocabulary only.**
+- ALLOWED: `locked off`, `static camera`, `imperceptibly slow forward drift`, `barely perceptible slow zoom`, `gentle slow pan left/right`
+- BANNED (causes jitter): `orbit`, `dolly zoom`, `pull back`, `push in`, `handheld`, `crane shot`, `whip pan`, `dynamic camera`, `360`, `tracking shot`, `steadicam`, `gimbal`
+
+**Rule 3 — Minimal subject motion.**
+- One focal subject maximum per shot.
+- Subject must be standing, seated, or holding still. Micro-expressions and subtle breathing are fine.
+- No walking, turning around, shaking hands, or pointing at anything while camera also moves.
+- Shot 04 must be objects only — no people.
+
+**Rule 4 — Scene simplicity.**
+- No mirrors, rain, smoke, complex reflections, glass corridors, or neon-dense environments.
+- Maximum 2 people in frame; both must be static.
+- Simple, single-depth backgrounds preferred.
+
+**Rule 5 — Prompt length and duration.**
+- Prompt body: 30–40 words max (excluding any voiceover line).
+- Duration: 4 seconds per clip (not 5). 4s clips have significantly better temporal stability.
+- Voiceover line appended to prompt: 8 words max at 130 wpm.
+
+---
+
 ## DEFAULT BEHAVIOUR — READ THIS FIRST (overrides all other sections)
 
 **Whenever the user asks you to make, create, generate, or produce a video:**
