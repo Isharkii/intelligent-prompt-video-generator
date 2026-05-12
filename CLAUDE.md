@@ -2,6 +2,27 @@
 
 ---
 
+## VOICEOVER TONE RULES (applies to every video, every shot)
+
+Write like a founder talking to another founder. NOT like a TV ad voiceover.
+
+**Good — spontaneous, direct, unexpected:**
+- Fragments over full sentences: "Three slides. That's the whole game."
+- Direct address: "Your deck is talking. You're not in the room."
+- Rhetorical questions: "Know what they read first?"
+- Unexpected angle: say the thing the viewer didn't expect to hear
+- Present tense, active voice: "Stop pitching. Start showing."
+
+**Bad — never use these patterns:**
+- Generic filler: "changes everything", "next level", "game-changing", "unlock your potential"
+- TV-commercial phrasing: "the right X changes Y", "X just got easier", "discover the difference"
+- Any line that sounds like it was written for a 30-second broadcast ad
+
+Each shot's voiceover line must advance the narrative — never repeat the same idea across shots.
+MAX 8 words per shot (4s clip at 130 wpm).
+
+---
+
 ## HIGGSFIELD SHOT PROMPT RULES — TEMPORAL COHERENCE (highest priority, overrides everything)
 
 Jitter, micro-shaking, and frame inconsistency are caused by too many simultaneous motion vectors.

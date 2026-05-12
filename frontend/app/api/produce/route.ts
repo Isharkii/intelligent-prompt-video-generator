@@ -113,7 +113,28 @@ PATH 1 — HIGGSFIELD NATIVE AUDIO (drives what is spoken IN the clip)
 - Format: Voiceover: "[exact words to be spoken]"
 - MAX 8 words per shot (130 wpm × 4s ≈ 8 words)
 - Shot 04 (b-roll): NO Voiceover line — ambient sound only
-- Example: Voiceover: "Your deck just lost the room."
+
+VOICEOVER TONE RULES — READ CAREFULLY:
+Write like a founder talking to another founder. NOT like an ad voiceover.
+✓ GOOD — spontaneous, direct, unexpected:
+  "Nobody told me decks decide raises."
+  "Wait — investors decide before slide three."
+  "Your deck is talking. You're not in the room."
+  "Three slides. That's the whole game."
+  "Stop pitching. Start showing."
+  "The deck spoke before he did."
+✗ BAD — generic, stiff, scripted ad copy (never use these):
+  "changes everything", "next level", "game-changing", "unlock your potential"
+  "the right X changes Y", "X just got easier", "discover the difference"
+  Any line that sounds like it belongs in a TV commercial
+
+RULES:
+- Fragments are better than complete sentences: "Not a template. A strategy." beats "This is not a template, it is a strategy."
+- Direct address: "your", "you" — make it personal
+- Present tense, active voice always
+- Rhetorical questions work: "Know what they read first?"
+- Unexpected angle — say the thing the viewer didn't expect to hear
+- Never repeat the same idea across shots — each line must advance the narrative
 
 PATH 2 — JSON EXTRACTION (drives UI display and subtitle overlays)
 - In the final JSON block, output the voiceover field with the EXACT same words from Path 1
