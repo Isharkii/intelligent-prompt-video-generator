@@ -278,7 +278,7 @@ export async function POST(req: NextRequest) {
         // Parse Claude's JSON output — shots, caption, and voiceover all live in the same block
         // Take the LAST json block: Claude may emit intermediate reasoning blocks before the final output
         type VoiceoverScript = { shot_01?: string; shot_02?: string; shot_03?: string };
-        const allJsonMatches = [...fullText.matchAll(/```json\s*([\s\S]*?)\s*```/g)];
+        const allJsonMatches = Array.from(fullText.matchAll(/```json\s*([\s\S]*?)\s*```/g));
         const jsonMatch = allJsonMatches.length > 0
           ? [null, allJsonMatches[allJsonMatches.length - 1][1]]
           : null;
@@ -286,9 +286,9 @@ export async function POST(req: NextRequest) {
         let caption:  CaptionCopy | null = null;
         let voiceover: VoiceoverScript | null = null;
 
-        if (jsonMatch) {
+        if (jsonMatch && jsonMatch[1]) {
           try {
-            const parsed = JSON.parse(jsonMatch[1]);
+            const parsed = JSON.parse(jsonMatch[1] as string);
             shots     = (parsed.shots     as GeneratedShot[])    ?? [];
             caption   = (parsed.caption   as CaptionCopy)        ?? null;
             voiceover = (parsed.voiceover as VoiceoverScript)    ?? null;

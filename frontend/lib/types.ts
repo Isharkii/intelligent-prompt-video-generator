@@ -80,6 +80,7 @@ export interface RemotionScene {
   caption: CaptionConfig;
   broll_overlay: BRollOverlay;
   audio_note: string;
+  motion_graphics?: MotionGraphicsConfig;
 }
 
 export interface RemotionScenePlan {
