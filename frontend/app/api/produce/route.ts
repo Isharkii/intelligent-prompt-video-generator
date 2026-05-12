@@ -171,13 +171,18 @@ MOTION GRAPHICS — BUDGET RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FOUNDATION (apply to every shot):
 • zoom_pan — always include on every shot. direction: "in" | "in_left" | "in_right" | "in_up" | "in_down", intensity: 0.06–0.12
-• subtitle — include on shots 01–03 whenever a voiceover line is present (one SubtitleLine matching the voiceover text, from_frame: 0, to_frame: duration × 30)
+
+TEXT RULE — CRITICAL: CaptionOverlay is the sole voiceover text renderer
+• NEVER put type "subtitle" in motion_graphics.overlays.
+  The scene.caption field is rendered by CaptionOverlay (centred on screen).
+  Adding a subtitle overlay creates a SECOND caption at the bottom — duplicate text.
+• Voiceover text goes in scene.caption.text ONLY. Keep motion_graphics.overlays free of subtitle entries.
 
 CONTEXTUAL (earn before using — max 1 per shot, max 2 total across the whole video):
 • logo_reveal  — brand intro only, shot 01 maximum, only if brand is provided
-• cta_card     — final shot only (shot 04 b-roll end-slate or shot 03 payoff), once per video
-• stat_popup   — only when a specific number IS the point of the hook/payoff
-• kinetic_type — one style, one shot; never on the same shot as subtitle; use for hook or payoff only
+• cta_card     — shot 04 ONLY, always pass position: "center", once per video
+• stat_popup   — only when a specific number IS the point of the hook/payoff; never on a shot that already has a non-empty scene.caption (too cluttered); always pass value: <number> and suffix: "%" — NEVER pass stat as a string (causes NaN)
+• kinetic_type — one style, one shot; only on a shot where scene.caption.style is "none"; use for hook or payoff only
 • particle     — only when visual_style contains "luxury", "dreamy", "ethereal", or "atmospheric"
 • ui_anim      — only when the narrative arc explicitly involves showing a product UI or app screen
 • chart        — only when the hook or payoff is data-driven (a stat must anchor the concept)
@@ -185,8 +190,8 @@ CONTEXTUAL (earn before using — max 1 per shot, max 2 total across the whole v
 
 CONFLICT RULES:
 • Never put two contextual overlays on the same shot
-• If subtitle is on a shot, kinetic_type cannot also be on that shot
-• Shot 04 (b-roll) gets ONLY: zoom_pan + optionally cta_card
+• Never put any contextual overlay on a shot that already has a non-empty scene.caption
+• Shot 04 (b-roll) gets ONLY: zoom_pan + optionally cta_card (position: "center")
 • Count your contextual uses before writing the JSON. If you've already used 2, all remaining shots get foundation only.
 
 TONE GATES:

@@ -66,7 +66,7 @@ AI video models misspell brand names without exception (e.g. "Pitchworx" rendere
 **The final video MUST include all of the following — do not skip any:**
 - ✓ Higgsfield video clips (4 shots)
 - ✓ Voiceover audio (native Higgsfield audio baked into each clip via `sound: "on"`)
-- ✓ Captions / subtitles (driven by voiceover text → SubtitleTrack overlay)
+- ✓ Captions / subtitles (driven by voiceover text → scene.caption field → CaptionOverlay, centred on screen. NEVER use SubtitleTrack in motion_graphics.overlays — it duplicates captions at the bottom)
 - ✓ Transitions between scenes (fade, cut, zoom_blur, whip_pan per scene)
 - ✓ Zoom-pan (Ken Burns) effect on every shot
 - ✓ Motion graphics (kinetic type, CTA card, stat popup — where appropriate per budget rules)

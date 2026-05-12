@@ -36,7 +36,11 @@ export const FinalVideo: React.FC<FinalVideoProps> = ({ config }) => {
             durationInFrames={durationInFrames}
           >
             <BRollScene scene={scene} />
-            <CaptionOverlay caption={scene.caption} />
+            {/* Suppress CaptionOverlay when motion_graphics already has a subtitle overlay
+                to prevent double text rendering (SubtitleTrack bottom + CaptionOverlay middle) */}
+            {!scene.motion_graphics?.overlays?.some((o) => o.type === "subtitle") && (
+              <CaptionOverlay caption={scene.caption} />
+            )}
           </Sequence>
         );
       })}
