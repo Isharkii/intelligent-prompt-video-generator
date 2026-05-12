@@ -26,6 +26,10 @@ output/thumbnails/
 remotion/scene-config.json
 remotion/scene-config-combined.json
 
+# Claude Code agents & downloaded skills
+.agents/
+skills-lock.json
+
 # Temp files
 *.tmp
 sessions.json
