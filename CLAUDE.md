@@ -7,9 +7,9 @@
 **Whenever the user asks you to make, create, generate, or produce a video:**
 
 1. Read both CSV training files first (see Section 0).
-2. Generate exactly **2 concept options** using the training data — not 3, not 4, always 2.
+2. Generate exactly **3 concept options** using the training data — not 2, not 4, always 3.
    Present them using the concept card format from Section 2.
-3. Ask: `Which concept do you want to produce? (1 / 2)`
+3. Ask: `Which concept do you want to produce? (1 / 2 / 3)`
 4. Wait for the user to pick one.
 5. Once they pick, autonomously run the full production pipeline end-to-end:
    - Write all shot prompts (Section 3A)

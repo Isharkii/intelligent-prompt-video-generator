@@ -236,7 +236,7 @@ export async function POST(req: NextRequest) {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stream = await (client.beta.messages as any).create({
-          model:      "claude-opus-4-7",
+          model:      "claude-sonnet-4-6",
           max_tokens: 20000,
           system:     buildSystemPrompt(context),
           messages:   [{ role: "user", content: buildUserMessage(concept, context) }],
